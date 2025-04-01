@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common'; // NestJS 提供的依賴注入工具
+import { Injectable, UnauthorizedException } from '@nestjs/common'; // NestJS 提供的依賴注入工具
 import * as bcrypt from 'bcrypt'; // 密碼加密工具
+import { JwtService } from '@nestjs/jwt';
 
 // 定義一個 User 型別 (模擬資料庫用)
 interface User {
@@ -13,6 +14,8 @@ interface User {
 export class AuthService {
     // 假裝這是一個資料庫，實際上是存在記憶體的陣列
     private users: User[] = [];
+
+    constructor(private jwtService: JwtService) {}
 
     // 註冊功能
     async register(email: string, password: string, name: string, age: number) {
@@ -48,4 +51,20 @@ export class AuthService {
         // 回傳註冊成功訊息
         return { message: '註冊成功' };
     }
+    async login(email: string, password: string) {
+        // 找使用者
+        const user = this.users.find(u => u.email === email);
+        if (!user) throw new UnauthorizedException('找不到使用者');
+    
+        // 比對密碼
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) throw new UnauthorizedException('密碼錯誤');
+    
+        // 產生 JWT token
+        const payload = { email: user.email, name: user.name, age: user.age };
+        const token = this.jwtService.sign(payload);
+    
+        return { token };
+      }
+
 }
