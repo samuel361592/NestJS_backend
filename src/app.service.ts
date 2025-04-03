@@ -1,8 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
-@Injectable()
+@Controller()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
+    @Get()
+    healthCheck() {
+        return {
+            status: 'OK',
+            project: 'Fullstack Project',
+            version: '1.0.0',
+            timestamp: new Date().toISOString(),
+        };
+    }
 }
