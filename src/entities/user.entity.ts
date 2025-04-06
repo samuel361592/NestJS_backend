@@ -1,4 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Unique, OneToMany, ManyToMany } from 'typeorm';
+import { Post } from './post.entity';
+import { Role } from './role.entity';
+
 
 @Entity()
 @Unique(['email'])
@@ -6,15 +9,23 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ type: 'varchar', length: 100 })
     name: string;
 
-    @Column()
+    @Column({ type: 'varchar', length: 100 })
     email: string;
 
-    @Column({ select: false })
+    @Column({ type: 'varchar', select: false })
     password: string;
 
-    @Column()
+    @Column({ type: 'int' })
     age: number;
+
+    // 一個使用者可以擁有多個帖子
+    @OneToMany(() => Post, post => post.user)
+    posts: Post[];
+
+    // 一個使用者可以擁有多個角色
+    @ManyToMany(() => Role, role => role.users)
+    roles: Role[];
 }

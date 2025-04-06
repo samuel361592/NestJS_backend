@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
-import { User } from '../user/user.entity';  // 記得有 user.entity
+import { User } from '../entities/user.entity'; 
 
 @Module({
   imports: [
