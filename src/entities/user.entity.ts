@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique, OneToMany, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Unique, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { Post } from './post.entity';
 import { Role } from './role.entity';
 
@@ -27,5 +27,6 @@ export class User {
 
     // 一個使用者可以擁有多個角色
     @ManyToMany(() => Role, role => role.users)
+    @JoinTable()
     roles: Role[];
 }

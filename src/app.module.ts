@@ -4,11 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { User } from './entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { PostModule } from './post/post.module';
 
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // 讀取 .env
+    ConfigModule.forRoot({ isGlobal: true ,
+      envFilePath: `.env${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''}`,}), // 讀取 .env
 
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -22,6 +24,7 @@ import { AuthModule } from './auth/auth.module';
   }),
     AuthModule,
     UserModule,
+    PostModule,
   ],
 })
 export class AppModule {}
