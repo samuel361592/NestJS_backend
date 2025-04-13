@@ -8,10 +8,11 @@ export const AppDataSource = new DataSource({
   host: 'localhost',
   port: 3306,
   username: 'root',
-  password: '123456',
-  database: 'fullstack_db',
+  password: '362578',
+  database: 'fullstackdb_test',
   entities: [User, Post, Role],
   synchronize: false,
   logging: true,
   migrations: ['src/migrations/*.ts'],
 });
+console.log('Entities loaded:', [User, Post, Role]);

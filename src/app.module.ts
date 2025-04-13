@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { User } from './entities/user.entity';
+import { Post } from './entities/post.entity';
+import { Role } from './entities/role.entity';
 import { AuthModule } from './auth/auth.module';
 import { PostModule } from './post/post.module';
 
@@ -19,7 +21,7 @@ import { PostModule } from './post/post.module';
       username: process.env.DB_USERNAME || 'root',
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_DATABASE || '',
-      entities: [User],
+      entities: [User, Post, Role],
       synchronize: true,
   }),
     AuthModule,
