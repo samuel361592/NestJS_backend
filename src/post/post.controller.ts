@@ -38,18 +38,18 @@ import {
       return this.postService.create(dto, req.user.id);
     }
   
-    // 編輯貼文（需登入、只能改自己的）
+    // 編輯貼文（需登入、只能改自己的、admin可改所有人的）
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
     updatePost(@Param('id') id: number, @Body() dto: UpdatePostDto, @Request() req) {
-      return this.postService.update(id, dto, req.user.id);
+      return this.postService.update(id, dto, req.user);
     }
   
-    // 刪除貼文（需登入、只能刪自己的）
+    // 刪除貼文（需登入、只能刪自己的、admin可以刪除所有人的）
     @UseGuards(JwtAuthGuard)
     @Delete(':id')
     deletePost(@Param('id') id: number, @Request() req) {
-      return this.postService.remove(id, req.user.id);
+      return this.postService.remove(id, req.user);
     }
   }
   

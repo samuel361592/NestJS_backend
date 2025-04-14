@@ -1,15 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity()
 export class Role {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: 'varchar', length: 100 })
-    name: string;
+  @Column({ type: 'varchar', length: 100, unique: true })
+  name: string; // e.g., 'admin', 'user'
 
-    @ManyToMany(() => User, user => user.roles)
-    @JoinTable()
-    users: User[];
+  @OneToMany(() => User, user => user.role)
+  users: User[];
 }

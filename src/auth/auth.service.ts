@@ -41,6 +41,7 @@ export class AuthService {
         const user = await this.userRepository.findOne({
             where: { email },
             select: ['id', 'email', 'name', 'age', 'password'],
+            relations: ['role'],
         });
         if (!user) throw new UnauthorizedException('找不到使用者');
 
@@ -48,7 +49,13 @@ export class AuthService {
 
         if (!isPasswordValid) throw new UnauthorizedException('密碼錯誤');
 
-        const payload = { id: user.id, email: user.email, name: user.name, age: user.age };
+        const payload = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            age: user.age,
+            role: user.role?.name ?? 'general-user',
+        };
         const token = this.jwtService.sign(payload);
 
         return { token };

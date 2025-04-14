@@ -1,29 +1,27 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './user/user.module';
-import { User } from './entities/user.entity';
-import { Post } from './entities/post.entity';
-import { Role } from './entities/role.entity';
-import { AuthModule } from './auth/auth.module';
-import { PostModule } from './post/post.module';
 
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true ,
-      envFilePath: `.env${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''}`,}), // 讀取 .env
+    // 全域載入 .env
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
 
+    // 使用 DATABASE_URL 連線字串（建議使用 dotenv 搭配 CLI 指令）
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306', 10),
-      username: process.env.DB_USERNAME || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_DATABASE || '',
-      entities: [User, Post, Role],
-      synchronize: true,
-  }),
+      url: process.env.DATABASE_URL,
+      entities: [__dirname + '/**/*.entity{.ts,.js}'], // 通用寫法，部署與開發皆可用
+      synchronize: false,
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
+    }),
+
     AuthModule,
     UserModule,
     PostModule,
