@@ -3,7 +3,10 @@ dotenv.config();
 
 import { DataSource } from 'typeorm';
 
-const isTs = process.env.NODE_ENV !== 'production';
+// ✅ 手動匯入實體類別（一定要這樣做）
+import { Role } from './entities/role.entity';
+import { User } from './entities/user.entity';
+import { Post } from './entities/post.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -12,8 +15,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'fullstackdb_test',
-  entities: [isTs ? 'src/entities/*.ts' : 'dist/entities/*.js'],
-  migrations: [isTs ? 'src/migrations/*.ts' : 'dist/migrations/*.js'],
+  entities: [User, Post, Role],
+  migrations: ['src/migrations/*.ts'], // 這個保留字串即可
   synchronize: false,
   logging: true,
 });
