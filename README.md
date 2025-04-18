@@ -69,6 +69,7 @@ npx tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
 以 [Postman](https://www.postman.com/) 測試路由，需先透過 `/auth/login` 登入取得 JWT Token
 
 ### 貼文路由：
+
 - `GET /posts`：取得所有貼文
 - `GET /posts/:id`：取得單篇貼文
 - `POST /posts`：新增貼文（需帶 token）
@@ -83,4 +84,3 @@ npx tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
 ## 作者
 
 本專案由samuel開發，用於練習 NestJS + TypeORM + MySQL 後端應用開發。
-

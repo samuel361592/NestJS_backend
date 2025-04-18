@@ -3,15 +3,15 @@ import { User } from './user.entity';
 
 @Entity()
 export class Post {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: 'varchar', length: 255 })
-    title: string;
+  @Column({ type: 'varchar', length: 255 })
+  title: string;
 
-    @Column({ type: 'text' })
-    content: string;
+  @Column({ type: 'text' })
+  content: string;
 
-    @ManyToOne(() => User, user => user.posts)
-    user: User;
+  @ManyToOne(() => User, (user) => user.posts)
+  user: User;
 }

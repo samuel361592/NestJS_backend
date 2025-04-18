@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UseGuards, Get, Request} from '@nestjs/common'; // 常用的裝飾器
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Get,
+  Request,
+} from '@nestjs/common'; // 常用的裝飾器
 import { AuthService } from './auth.service'; // 匯入AuthService
 import { AuthGuard } from '@nestjs/passport';
 
@@ -9,7 +16,13 @@ export class AuthController {
   // 定義 POST /auth/register
   @Post('register')
   register(
-    @Body() body: { email: string; password: string; name: string; age: number },
+    @Body()
+    body: {
+      email: string;
+      password: string;
+      name: string;
+      age: number;
+    },
   ) {
     // 呼叫 service 的 register() 方法
     return this.authService.register(
@@ -28,7 +41,7 @@ export class AuthController {
   // 受保護的API
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  getProfile(@Request() req){
-    return { user: req.user}
+  getProfile(@Request() req) {
+    return { user: req.user };
   }
 }

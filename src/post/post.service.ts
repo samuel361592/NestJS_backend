@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../entities/post.entity';
@@ -6,8 +10,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { User } from '../entities/user.entity';
 import { InternalServerErrorException } from '@nestjs/common';
-
-
 
 @Injectable()
 export class PostService {
@@ -36,7 +38,7 @@ export class PostService {
     try {
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) throw new NotFoundException('找不到使用者');
-  
+
       const post = this.postRepo.create({
         ...dto,
         user,
@@ -49,20 +51,24 @@ export class PostService {
   }
 
   // 編輯貼文（admin可以編輯不是自己貼文）
-  async update(id: number, dto: UpdatePostDto, user: { id: number; role: string }) {
+  async update(
+    id: number,
+    dto: UpdatePostDto,
+    user: { id: number; role: string },
+  ) {
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['user'],
     });
-  
+
     console.log('post.user.id =', post?.user?.id);
     console.log('req.user.id =', user.id);
-  
+
     if (!post) throw new NotFoundException('Post not found');
     if (post.user.id !== user.id && user.role !== 'admin') {
       throw new ForbiddenException('You can only edit your own post');
     }
-  
+
     return this.postRepo.save({ ...post, ...dto });
   }
 
@@ -72,17 +78,15 @@ export class PostService {
       where: { id },
       relations: ['user'],
     });
-  
+
     console.log('post.user.id =', post?.user?.id);
     console.log('req.user.id =', user.id);
-  
+
     if (!post) throw new NotFoundException('Post not found');
     if (post.user.id !== user.id && user.role !== 'admin') {
       throw new ForbiddenException('You can only delete your own post');
     }
-  
+
     return this.postRepo.remove(post);
   }
-  
-  
 }

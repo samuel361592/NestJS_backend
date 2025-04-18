@@ -25,13 +25,21 @@ describe('AuthController', () => {
   });
 
   it('應該成功註冊', async () => {
-    const result = await controller.register({ email: 'test@test.com', password: '12345678', name: 'sam', age: 20 });
+    const result = await controller.register({
+      email: 'test@test.com',
+      password: '12345678',
+      name: 'sam',
+      age: 20,
+    });
     expect(result).toEqual({ message: '註冊成功' });
     expect(authService.register).toBeCalled();
   });
 
   it('應該成功登入', async () => {
-    const result = await controller.login({ email: 'test@test.com', password: '12345678' });
+    const result = await controller.login({
+      email: 'test@test.com',
+      password: '12345678',
+    });
     expect(result).toEqual({ token: 'fake-jwt-token' });
     expect(authService.login).toBeCalled();
   });
@@ -41,5 +49,4 @@ describe('AuthController', () => {
     const result = controller.getProfile({ user: mockUser });
     expect(result).toEqual({ user: mockUser });
   });
-
 });

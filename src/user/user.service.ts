@@ -29,7 +29,7 @@ export class UserService {
   async findAll() {
     const users = await this.userRepo.find({ relations: ['role'] });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user.id,
       name: user.name,
       email: user.email,
@@ -40,15 +40,18 @@ export class UserService {
 
   // 指定角色給使用者（支援 admin/user）
   async setUserRole(userId: number, roleName: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId }, relations: ['role'] });
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['role'],
+    });
     if (!user) throw new NotFoundException('User not found');
-  
+
     const role = await this.roleRepo.findOne({ where: { name: roleName } });
     if (!role) throw new NotFoundException('Role not found');
-  
+
     user.role = role;
     await this.userRepo.save(user); // ✅ 儲存後不要回傳原始物件
-  
+
     // ✅ 手動回傳乾淨格式
     return {
       id: user.id,
@@ -58,7 +61,6 @@ export class UserService {
       role: role.name, // ✅ 只回傳名稱，不回傳 id
     };
   }
-  
 
   async assignRole(userId: number, roleName: string) {
     return this.setUserRole(userId, roleName); // 呼叫共用邏輯

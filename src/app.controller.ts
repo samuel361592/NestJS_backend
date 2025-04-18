@@ -2,10 +2,10 @@
 
 import { Controller, Get } from '@nestjs/common';
 
-@Controller()
+@Controller('health') //伺服器狀態檢查
 export class AppController {
   @Get()
-  getHello(): string {
-    return 'Hello World!';
+  healthCheck(): string {
+    return 'OK';
   }
 }

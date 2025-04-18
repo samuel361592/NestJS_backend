@@ -1,16 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AppDataSource } from './data-source';
+import { RolesGuard } from './common/guards/roles.guard';
+import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalGuards(new RolesGuard(new Reflector()));
 
-  // ✅ 開啟 CORS（允許前端請求）
   app.enableCors({
-    origin: true, // 允許任意來源（開發用）
+    origin: true,
     credentials: true,
   });
 
   await app.listen(3001);
+  console.log('Server is running on http://localhost:3001');
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('啟動失敗:', err);
+});
