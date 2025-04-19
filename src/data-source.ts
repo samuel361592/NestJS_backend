@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { Post } from './entities/post.entity';
+import { UserRole } from './entities/user-role.entity';
 
 import { parse } from 'url';
 
@@ -21,7 +22,7 @@ export const AppDataSource = new DataSource({
   username,
   password,
   database: dbName,
-  entities: [User, Post, Role],
+  entities: [User, Post, Role, UserRole],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
   logging: true,

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import { UserRole } from '../entities/user-role.entity';
 
 @Injectable()
 export class UserService {
@@ -11,9 +12,10 @@ export class UserService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepo: Repository<Role>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepo: Repository<UserRole>,
   ) {}
 
-  // 啟動時自動建立預設角色
   async onModuleInit() {
     const roles = ['admin', 'user'];
     for (const name of roles) {
@@ -25,44 +27,46 @@ export class UserService {
     }
   }
 
-  // 查詢所有使用者（回傳乾淨資料）
   async findAll() {
-    const users = await this.userRepo.find({ relations: ['role'] });
+    const users = await this.userRepo.find({
+      relations: ['userRoles', 'userRoles.role'],
+    });
 
     return users.map((user) => ({
       id: user.id,
       name: user.name,
       email: user.email,
       age: user.age,
-      role: user.role?.name, // 只回傳角色名稱，不含 id
+      roles: user.userRoles.map((ur) => ur.role.name),
     }));
   }
 
-  // 指定角色給使用者（支援 admin/user）
   async setUserRole(userId: number, roleName: string) {
     const user = await this.userRepo.findOne({
       where: { id: userId },
-      relations: ['role'],
+      relations: ['userRoles', 'userRoles.role'],
     });
     if (!user) throw new NotFoundException('User not found');
 
     const role = await this.roleRepo.findOne({ where: { name: roleName } });
     if (!role) throw new NotFoundException('Role not found');
 
-    user.role = role;
-    await this.userRepo.save(user); // ✅ 儲存後不要回傳原始物件
+    const alreadyHas = user.userRoles.some((ur) => ur.role.id === role.id);
+    if (!alreadyHas) {
+      const userRole = this.userRoleRepo.create({ user, role });
+      await this.userRoleRepo.save(userRole);
+    }
 
-    // ✅ 手動回傳乾淨格式
     return {
       id: user.id,
       name: user.name,
       email: user.email,
       age: user.age,
-      role: role.name, // ✅ 只回傳名稱，不回傳 id
+      roles: user.userRoles.map((ur) => ur.role.name).concat(role.name), // 新增後的結果
     };
   }
 
   async assignRole(userId: number, roleName: string) {
-    return this.setUserRole(userId, roleName); // 呼叫共用邏輯
+    return this.setUserRole(userId, roleName);
   }
 }

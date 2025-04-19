@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RolesGuard } from './common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,7 +12,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(3001);
   console.log('Server is running on http://localhost:3001');
 }

@@ -3,42 +3,28 @@ import {
   Controller,
   Post,
   UseGuards,
-  Get,
   Request,
-} from '@nestjs/common'; // 常用的裝飾器
-import { AuthService } from './auth.service'; // 匯入AuthService
+  Get,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { RegisterDto } from '../post/dto/register.dto';
+import { LoginDto } from '../post/dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 
-@Controller('auth') // 路由前綴，會變成 /auth
+@Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {} // 注入 service
+  constructor(private readonly authService: AuthService) {}
 
-  // 定義 POST /auth/register
   @Post('register')
-  register(
-    @Body()
-    body: {
-      email: string;
-      password: string;
-      name: string;
-      age: number;
-    },
-  ) {
-    // 呼叫 service 的 register() 方法
-    return this.authService.register(
-      body.email,
-      body.password,
-      body.name,
-      body.age,
-    );
-  }
-  // 定義 POST /auth/login
-  @Post('login')
-  login(@Body() body: { email: string; password: string }) {
-    return this.authService.login(body.email, body.password);
+  register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto); // ✅ 改為只傳一個 DTO
   }
 
-  // 受保護的API
+  @Post('login')
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto); // ✅ 改為只傳一個 DTO
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   getProfile(@Request() req) {

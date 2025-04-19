@@ -1,25 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+
+interface JwtPayload {
+  id: number;
+  email: string;
+  name: string;
+  age: number;
+  role: string;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(configService: ConfigService) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is not defined in environment variables.');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false, // 過期會自動擋下
-      secretOrKey: 'my-secret-key', // 和你註冊 JwtModule 的 secret 一樣
+      ignoreExpiration: false,
+      secretOrKey: jwtSecret,
     });
   }
 
-  // 驗證成功會執行這個
-  async validate(payload: any) {
-    return {
-      id: payload.id,
-      email: payload.email,
-      name: payload.name,
-      age: payload.age,
-      role: payload.role,
-    };
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    return payload;
   }
 }

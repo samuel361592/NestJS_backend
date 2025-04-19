@@ -4,10 +4,8 @@ import {
   PrimaryGeneratedColumn,
   Unique,
   OneToMany,
-  ManyToOne,
 } from 'typeorm';
 import { Post } from './post.entity';
-import { Role } from './role.entity';
 import { UserRole } from './user-role.entity';
 
 @Entity()
@@ -28,10 +26,6 @@ export class User {
   @Column({ type: 'int' })
   age: number;
 
-  @ManyToOne(() => Role, (role) => role.users)
-  role: Role;
-
-  // 一個使用者可以擁有多個帖子
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
 
