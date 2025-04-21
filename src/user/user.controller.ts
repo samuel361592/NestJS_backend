@@ -17,7 +17,9 @@ import { Request as ExpressRequest } from 'express';
 interface JwtPayload {
   id: number;
   email: string;
-  roles: string[];
+  name: string;
+  age: number;
+  role: string;
 }
 
 @Controller('users')
@@ -39,14 +41,11 @@ export class UserController {
     @Request() req: ExpressRequest,
   ) {
     const user = req.user as JwtPayload;
-
-    console.log('user roles =', user.roles);
-
-    const isAdmin = user.roles?.some(r => r.trim().toLowerCase() === 'admin');
+    console.log('user role =', user.role);
+    const isAdmin = user.role.trim().toLowerCase() === 'admin';
     if (!isAdmin) {
       throw new ForbiddenException('只有 admin 可以更改角色');
     }
-
     return this.userService.setUserRole(id, role);
   }
 }

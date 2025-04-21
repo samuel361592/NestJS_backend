@@ -1,10 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtPayload } from './jwt.strategy';
 
 describe('AuthController', () => {
   let controller: AuthController;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let authService: AuthService;
+
+  const mockRegister = jest.fn().mockResolvedValue({ message: '註冊成功' });
+  const mockLogin = jest.fn().mockResolvedValue({ token: 'fake-jwt-token' });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,8 +18,8 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: {
-            register: jest.fn().mockResolvedValue({ message: '註冊成功' }),
-            login: jest.fn().mockResolvedValue({ token: 'fake-jwt-token' }),
+            register: mockRegister,
+            login: mockLogin,
           },
         },
       ],
@@ -32,7 +37,7 @@ describe('AuthController', () => {
       age: 20,
     });
     expect(result).toEqual({ message: '註冊成功' });
-    expect(authService.register).toBeCalled();
+    expect(mockRegister).toHaveBeenCalled();
   });
 
   it('應該成功登入', async () => {
@@ -41,12 +46,19 @@ describe('AuthController', () => {
       password: '12345678',
     });
     expect(result).toEqual({ token: 'fake-jwt-token' });
-    expect(authService.login).toBeCalled();
+    expect(mockLogin).toHaveBeenCalled();
   });
 
   it('應該成功取得 profile', () => {
-    const mockUser = { id: 1, email: 'test@test.com' };
-    const result = controller.getProfile({ user: mockUser });
+    const mockUser: JwtPayload = {
+      id: 1,
+      email: 'test@test.com',
+      name: 'Sam',
+      age: 25,
+      role: 'user',
+    };
+    const req = { user: mockUser } as Request & { user: JwtPayload };
+    const result = controller.getProfile(req);
     expect(result).toEqual({ user: mockUser });
   });
 });
