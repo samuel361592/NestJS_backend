@@ -5,8 +5,8 @@ import { Role } from '../entities/role.entity';
 import { UserRole } from '../entities/user-role.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from '../post/dto/register.dto';
-import { LoginDto } from '../post/dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 describe('AuthService 測試', () => {
   let authService: AuthService;

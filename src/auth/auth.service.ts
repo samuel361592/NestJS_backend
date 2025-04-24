@@ -10,8 +10,8 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { UserRole } from '../entities/user-role.entity';
-import { RegisterDto } from '../post/dto/register.dto';
-import { LoginDto } from '../post/dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
