@@ -12,6 +12,8 @@ import { Role } from '../entities/role.entity';
 import { UserRole } from '../entities/user-role.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ConflictException } from '@nestjs/common';
+import { ErrorCode } from 'src/common/errors/error-codes.enum';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +31,12 @@ export class AuthService {
     const { email, password, name, age } = dto;
 
     const exist = await this.userRepository.findOne({ where: { email } });
-    if (exist) throw new Error('信箱已註冊');
+    if (exist) {
+      throw new ConflictException({
+        errorCode: ErrorCode.EmailAlreadyExists,
+        message: '此信箱已被註冊，請使用其他信箱',
+      } as any);
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -46,7 +53,19 @@ export class AuthService {
     const userRole = this.userRoleRepository.create({ user, role });
     await this.userRoleRepository.save(userRole);
 
-    return { message: '註冊成功' };
+    const payload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      age: user.age,
+      role: 'user',
+    };
+
+    const token = this.jwtService.sign(payload);
+    return {
+      message: '註冊成功',
+      token,
+    };
   }
 
   async login(dto: LoginDto) {

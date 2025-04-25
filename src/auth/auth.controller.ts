@@ -18,7 +18,6 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 
 @ApiTags('Auth')
@@ -29,25 +28,44 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: '使用者註冊' })
   @ApiBody({ type: RegisterDto })
-  @ApiResponse({ status: 201, description: '註冊成功' })
+  @ApiResponse({
+    status: 201,
+    description: '註冊成功',
+    schema: {
+      example: {
+        message: '註冊成功',
+      },
+    },
+  })
   @ApiResponse({
     status: 400,
     description: '格式錯誤或欄位缺失',
-    type: ErrorResponseDto,
     schema: {
       example: {
-        errorCode: ErrorCode.InvalidRegisterFormat,
+        statusCode: 400,
+        errorCode: '400-01-01-003',
         message: '信箱、密碼、名稱等欄位格式錯誤',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: '信箱已註冊',
+    schema: {
+      example: {
+        statusCode: 409,
+        errorCode: '409-01-01-001',
+        message: '此信箱已被註冊，請使用其他信箱',
       },
     },
   })
   @ApiResponse({
     status: 500,
     description: '伺服器錯誤',
-    type: ErrorResponseDto,
     schema: {
       example: {
-        errorCode: ErrorCode.InternalServerError,
+        statusCode: 500,
+        errorCode: '500-01-01-004',
         message: '無法處理註冊請求，請稍後再試',
       },
     },
@@ -71,9 +89,9 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: '帳號或密碼錯誤',
-    type: ErrorResponseDto,
     schema: {
       example: {
+        statusCode: 401,
         errorCode: ErrorCode.InvalidCredentials,
         message: '帳號或密碼錯誤',
       },
@@ -82,9 +100,9 @@ export class AuthController {
   @ApiResponse({
     status: 500,
     description: '伺服器錯誤',
-    type: ErrorResponseDto,
     schema: {
       example: {
+        statusCode: 500,
         errorCode: ErrorCode.InternalServerError,
         message: '登入處理失敗，請稍後再試',
       },
@@ -115,9 +133,9 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: '未授權或 token 無效',
-    type: ErrorResponseDto,
     schema: {
       example: {
+        statusCode: 401,
         errorCode: ErrorCode.TokenMissing,
         message: '請提供有效的 JWT token',
       },
