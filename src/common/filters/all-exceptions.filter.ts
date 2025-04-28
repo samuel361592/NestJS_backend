@@ -19,13 +19,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let responseMessage = 'Internal server error';
     let responseErrorCode = ErrorCode.InternalServerError;
 
-    // 處理 HTTP 例外
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
 
       const res = exception.getResponse();
 
-      // 如果是 BadRequestException，通常為 class-validator 格式錯誤
       if (exception instanceof BadRequestException) {
         responseErrorCode = ErrorCode.InvalidRegisterFormat;
         responseMessage = '信箱、密碼、名稱等欄位格式錯誤';
