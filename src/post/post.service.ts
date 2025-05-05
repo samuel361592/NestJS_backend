@@ -20,12 +20,10 @@ export class PostService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  // 所有人皆可查看全部貼文
   findAll() {
     return this.postRepo.find({ relations: ['user'] });
   }
 
-  // 所有人皆可查詢單篇貼文
   findOne(id: number) {
     return this.postRepo.findOne({
       where: { id },
@@ -33,7 +31,6 @@ export class PostService {
     });
   }
 
-  // 新增貼文（需登入）
   async create(dto: CreatePostDto, userId: number) {
     try {
       const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -50,40 +47,32 @@ export class PostService {
     }
   }
 
-  // 編輯貼文（admin可以編輯不是自己貼文）
   async update(
     id: number,
     dto: UpdatePostDto,
-    user: { id: number; role: string },
+    user: { id: number; roles: string[] },
   ) {
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['user'],
     });
 
-    console.log('post.user.id =', post?.user?.id);
-    console.log('req.user.id =', user.id);
-
     if (!post) throw new NotFoundException('Post not found');
-    if (post.user.id !== user.id && user.role !== 'admin') {
+    if (!user.roles.includes('admin') && post.user.id !== user.id) {
       throw new ForbiddenException('You can only edit your own post');
     }
 
     return this.postRepo.save({ ...post, ...dto });
   }
 
-  // 刪除貼文（admin可以刪除不是自己貼文）
-  async remove(id: number, user: { id: number; role: string }) {
+  async remove(id: number, user: { id: number; roles: string[] }) {
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['user'],
     });
 
-    console.log('post.user.id =', post?.user?.id);
-    console.log('req.user.id =', user.id);
-
     if (!post) throw new NotFoundException('Post not found');
-    if (post.user.id !== user.id && user.role !== 'admin') {
+    if (!user.roles.includes('admin') && post.user.id !== user.id) {
       throw new ForbiddenException('You can only delete your own post');
     }
 

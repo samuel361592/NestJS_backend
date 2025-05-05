@@ -19,6 +19,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let responseMessage = 'Internal server error';
     let responseErrorCode = ErrorCode.InternalServerError;
 
+    console.error('錯誤攔截器捕捉到異常：', exception);
+
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
 

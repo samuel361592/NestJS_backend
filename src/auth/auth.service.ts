@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -9,90 +10,93 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
-import { UserRole } from '../entities/user-role.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ConflictException } from '@nestjs/common';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
+
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
-    @InjectRepository(UserRole)
-    private userRoleRepository: Repository<UserRole>,
-    private jwtService: JwtService,
+    private readonly roleRepository: Repository<Role>,
+
+    private readonly jwtService: JwtService,
   ) {}
 
+  /** 註冊：直接把 user.roles 設為 [role] */
   async register(dto: RegisterDto) {
     const { email, password, name, age } = dto;
 
-    const exist = await this.userRepository.findOne({ where: { email } });
-    if (exist) {
+    if (await this.userRepository.findOne({ where: { email } })) {
       throw new ConflictException({
         errorCode: ErrorCode.EmailAlreadyExists,
         message: '此信箱已被註冊，請使用其他信箱',
-      } as any);
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const role = await this.roleRepository.findOne({
+      where: { name: 'user' },
+    });
+    if (!role) {
+      throw new NotFoundException('找不到 user 角色，請先建立角色');
+    }
 
-    const role = await this.roleRepository.findOne({ where: { name: 'user' } });
-    if (!role) throw new NotFoundException('找不到 user 角色，請先建立角色');
-
-    const user = await this.userRepository.save({
+    const hashed = await bcrypt.hash(password, 10);
+    const user = this.userRepository.create({
       email,
+      password: hashed,
       name,
       age,
-      password: hashedPassword,
+      roles: [role], // ← 這裡直接關聯
     });
-
-    const userRole = this.userRoleRepository.create({ user, role });
-    await this.userRoleRepository.save(userRole);
+    await this.userRepository.save(user);
 
     const payload = {
       id: user.id,
       email: user.email,
       name: user.name,
       age: user.age,
-      role: 'user',
+      roles: user.roles.map((r) => r.name),
     };
-
-    const token = this.jwtService.sign(payload);
     return {
       message: '註冊成功',
-      token,
+      token: this.jwtService.sign(payload),
     };
   }
 
+  /** 登入：relations: ['roles'] */
   async login(dto: LoginDto) {
     const { email, password } = dto;
-
     const user = await this.userRepository.findOne({
       where: { email },
       select: ['id', 'email', 'name', 'age', 'password'],
-      relations: ['userRoles', 'userRoles.role'],
+      relations: ['roles'],
     });
-
     if (!user) throw new UnauthorizedException('找不到使用者');
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) throw new UnauthorizedException('密碼錯誤');
-
-    const roles = user.userRoles.map((ur) => ur.role.name);
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('密碼錯誤');
+    }
 
     const payload = {
       id: user.id,
       email: user.email,
       name: user.name,
       age: user.age,
-      role: roles[0] || 'user',
+      roles: user.roles.map((r) => r.name),
     };
+    return { token: this.jwtService.sign(payload) };
+  }
 
-    const token = this.jwtService.sign(payload);
-    return { token };
+  /** 取得 profile，同樣用 relations: ['roles'] */
+  async getProfile(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+    if (!user) throw new NotFoundException('找不到使用者');
+    return user;
   }
 }

@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
-import { UserRoleModule } from './user-role/user-role.module';
 
 @Module({
   imports: [
@@ -24,7 +22,6 @@ import { UserRoleModule } from './user-role/user-role.module';
     AuthModule,
     UserModule,
     PostModule,
-    UserRoleModule,
   ],
 })
 export class AppModule {}

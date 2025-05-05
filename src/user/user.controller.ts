@@ -23,14 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
-
-interface JwtPayload {
-  id: number;
-  email: string;
-  name: string;
-  age: number;
-  role: string;
-}
+import { JwtPayload } from '../auth/jwt.strategy';
 
 @ApiTags('User')
 @Controller('users')
@@ -89,7 +82,7 @@ export class UserController {
     @Request() req: ExpressRequest,
   ) {
     const user = req.user as JwtPayload;
-    const isAdmin = user.role.trim().toLowerCase() === 'admin';
+    const isAdmin = user.roles?.includes('admin');
 
     if (!isAdmin) {
       throw new ForbiddenException({

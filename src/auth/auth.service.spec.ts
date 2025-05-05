@@ -2,7 +2,6 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
-import { UserRole } from '../entities/user-role.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
@@ -12,7 +11,6 @@ describe('AuthService 測試', () => {
   let authService: AuthService;
   let userRepo: jest.Mocked<Repository<User>>;
   let roleRepo: jest.Mocked<Repository<Role>>;
-  let userRoleRepo: jest.Mocked<Repository<UserRole>>;
   let jwtService: JwtService;
 
   beforeEach(() => {
@@ -25,16 +23,11 @@ describe('AuthService 測試', () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<Role>>;
 
-    userRoleRepo = {
-      create: jest.fn().mockImplementation((data: UserRole): UserRole => data),
-      save: jest.fn(),
-    } as unknown as jest.Mocked<Repository<UserRole>>;
-
     jwtService = {
       sign: jest.fn().mockReturnValue('mocked-token'),
     } as unknown as JwtService;
 
-    authService = new AuthService(userRepo, roleRepo, userRoleRepo, jwtService);
+    authService = new AuthService(userRepo, roleRepo, jwtService);
   });
 
   it('應該成功註冊', async () => {
@@ -46,7 +39,7 @@ describe('AuthService 測試', () => {
       name: 'Sam',
       age: 20,
       password: '',
-      userRoles: [],
+      roles: [],
       posts: [],
     });
 
@@ -79,7 +72,7 @@ describe('AuthService 測試', () => {
       name: 'Sam',
       age: 20,
       password: await bcrypt.hash('12345678', 10),
-      userRoles: [{ role: { name: 'user' }, id: 1, user: {} as User }],
+      roles: [{ name: 'user', id: 1 }],
       posts: [],
     } as unknown as User;
 
@@ -107,7 +100,7 @@ describe('AuthService 測試', () => {
   it('登入時密碼錯誤', async () => {
     const user = {
       password: await bcrypt.hash('wrongpass', 10),
-      userRoles: [],
+      roles: [],
       posts: [],
     } as unknown as User;
 

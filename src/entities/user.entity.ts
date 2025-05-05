@@ -3,10 +3,12 @@ import {
   Column,
   PrimaryGeneratedColumn,
   Unique,
+  ManyToMany,
+  JoinTable,
   OneToMany,
 } from 'typeorm';
 import { Post } from './post.entity';
-import { UserRole } from './user-role.entity';
+import { Role } from './role.entity';
 
 @Entity()
 @Unique(['email'])
@@ -29,6 +31,7 @@ export class User {
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
 
-  @OneToMany(() => UserRole, (userRole) => userRole.user)
-  userRoles: UserRole[];
+  @ManyToMany(() => Role, { eager: true })
+  @JoinTable({ name: 'user_roles' })
+  roles: Role[];
 }

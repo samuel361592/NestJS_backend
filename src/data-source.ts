@@ -5,11 +5,8 @@ import { DataSource } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { Post } from './entities/post.entity';
-import { UserRole } from './entities/user-role.entity';
-
 import { parse } from 'url';
 
-// 解析 DATABASE_URL
 const dbUrl = process.env.DATABASE_URL || '';
 const parsedUrl = parse(dbUrl);
 const [username, password] = (parsedUrl.auth || '').split(':');
@@ -22,7 +19,7 @@ export const AppDataSource = new DataSource({
   username,
   password,
   database: dbName,
-  entities: [User, Post, Role, UserRole],
+  entities: [User, Post, Role],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
   logging: true,

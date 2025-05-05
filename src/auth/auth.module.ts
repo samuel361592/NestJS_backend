@@ -6,14 +6,13 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
-import { UserRole } from '../entities/user-role.entity';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([User, Role, UserRole]),
+    TypeOrmModule.forFeature([User, Role]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

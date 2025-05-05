@@ -16,17 +16,27 @@ export class RolesGuard implements CanActivate {
       'roles',
       context.getHandler(),
     );
+
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.user as { role?: string };
+    const user = request.user as { roles?: string[] };
 
-    if (!user || !requiredRoles.includes(user.role || '')) {
+    console.log('[RolesGuard] user:', user);
+    console.log('[RolesGuard] requiredRoles:', requiredRoles);
+
+    if (
+      !user ||
+      !Array.isArray(user.roles) ||
+      !requiredRoles.some((role) => user.roles!.includes(role))
+    ) {
+      console.warn('[RolesGuard] 無權限');
       throw new ForbiddenException('無權限');
     }
 
+    console.log('[RolesGuard] 通過驗證');
     return true;
   }
 }
