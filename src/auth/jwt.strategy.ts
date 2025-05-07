@@ -8,6 +8,8 @@ export interface JwtPayload {
   name: string;
   age: number;
   roles: string[];
+  iat?: number;
+  exp?: number;
 }
 
 @Injectable()

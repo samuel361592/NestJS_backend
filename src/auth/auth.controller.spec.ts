@@ -1,25 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { ExecutionContext } from '@nestjs/common';
 import { JwtPayload } from './jwt.strategy';
-import { Request as ExpressRequest } from 'express';
+import { Request } from 'express';
 
 describe('AuthController', () => {
   let controller: AuthController;
 
-  // 模擬 register / login
-  const mockRegister = jest.fn().mockResolvedValue({ message: '註冊成功' });
-  const mockLogin = jest.fn().mockResolvedValue({ token: 'fake-jwt-token' });
-
-  // 模擬 getProfile 回傳的使用者實體（含 roles 關聯）
-  const mockProfileEntity = {
-    id: 1,
-    email: 'test@test.com',
-    name: 'Sam',
-    age: 25,
-    roles: [{ name: 'user' }],
+  const mockAuthService = {
+    register: jest.fn(),
+    login: jest.fn(),
+    getProfile: jest.fn(),
   };
-  const mockGetProfile = jest.fn().mockResolvedValue(mockProfileEntity);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,73 +23,115 @@ describe('AuthController', () => {
       providers: [
         {
           provide: AuthService,
-          useValue: {
-            register: mockRegister,
-            login: mockLogin,
-            getProfile: mockGetProfile,
-          },
+          useValue: mockAuthService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: (context: ExecutionContext) => {
+          const req: Request & {
+            user: {
+              id: number;
+              email: string;
+              name: string;
+              age: number;
+              roles: string[];
+            };
+          } = context.switchToHttp().getRequest();
+
+          req.user = {
+            id: 1,
+            email: 'test@example.com',
+            name: 'Test User',
+            age: 30,
+            roles: ['user'],
+          };
+
+          return true;
+        },
+      })
+
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
   });
 
-  it('應該成功註冊', async () => {
-    const result = await controller.register({
-      email: 'test@test.com',
-      password: '12345678',
-      name: 'sam',
-      age: 20,
-    });
-    expect(result).toEqual({ message: '註冊成功' });
-    expect(mockRegister).toHaveBeenCalledWith({
-      email: 'test@test.com',
-      password: '12345678',
-      name: 'sam',
-      age: 20,
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('register', () => {
+    it('應該註冊成功並回傳 token', async () => {
+      const dto: RegisterDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        name: 'Test User',
+        age: 30,
+      };
+
+      const result = {
+        message: '註冊成功',
+        token: 'jwt-token',
+      };
+
+      mockAuthService.register.mockResolvedValue(result);
+
+      await expect(controller.register(dto)).resolves.toEqual(result);
+      expect(mockAuthService.register).toHaveBeenCalledWith(dto);
     });
   });
 
-  it('應該成功登入', async () => {
-    const result = await controller.login({
-      email: 'test@test.com',
-      password: '12345678',
-    });
-    expect(result).toEqual({ token: 'fake-jwt-token' });
-    expect(mockLogin).toHaveBeenCalledWith({
-      email: 'test@test.com',
-      password: '12345678',
+  describe('login', () => {
+    it('應該登入成功並回傳 token', async () => {
+      const dto: LoginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
+      const result = { token: 'jwt-token' };
+      mockAuthService.login.mockResolvedValue(result);
+
+      await expect(controller.login(dto)).resolves.toEqual(result);
+      expect(mockAuthService.login).toHaveBeenCalledWith(dto);
     });
   });
 
-  it('應該成功取得 profile', async () => {
-    // 這裡的 JwtPayload.roles 只是 string[]
-    const mockUser: JwtPayload = {
-      id: 1,
-      email: 'test@test.com',
-      name: 'Sam',
-      age: 25,
-      roles: ['user'],
-    };
+  describe('getProfile', () => {
+    it('應該取得使用者資料', async () => {
+      const userEntity = {
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test User',
+        age: 30,
+        roles: [{ name: 'user' }],
+      };
 
-    // 強制轉型成 ExpressRequest & { user: JwtPayload }
-    const req = { user: mockUser } as unknown as ExpressRequest & {
-      user: JwtPayload;
-    };
+      mockAuthService.getProfile.mockResolvedValue(userEntity);
 
-    const result = await controller.getProfile(req);
-    // 應該會用 mockGetProfile 拿到 mockProfileEntity，
-    // 並回傳 { user: { ... , roles: ['user'] } }
-    expect(mockGetProfile).toHaveBeenCalledWith(mockUser.id);
-    expect(result).toEqual({
-      user: {
-        id: mockProfileEntity.id,
-        email: mockProfileEntity.email,
-        name: mockProfileEntity.name,
-        age: mockProfileEntity.age,
-        roles: mockProfileEntity.roles.map((r) => r.name),
-      },
+      // 明確轉型為符合型別要求的 Request & { user: JwtPayload }
+      const req = {
+        user: {
+          id: 1,
+          email: 'test@example.com',
+          name: 'Test User',
+          age: 30,
+          roles: ['user'],
+        },
+      } as unknown as Request & { user: JwtPayload };
+
+      const result = await controller.getProfile(req);
+
+      expect(result).toEqual({
+        user: {
+          id: 1,
+          email: 'test@example.com',
+          name: 'Test User',
+          age: 30,
+          roles: ['user'],
+        },
+      });
+      expect(mockAuthService.getProfile).toHaveBeenCalledWith(1);
     });
   });
 });

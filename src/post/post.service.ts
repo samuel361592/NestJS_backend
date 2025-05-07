@@ -36,13 +36,11 @@ export class PostService {
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) throw new NotFoundException('找不到使用者');
 
-      const post = this.postRepo.create({
-        ...dto,
-        user,
-      });
+      const post = this.postRepo.create({ ...dto, user });
       return await this.postRepo.save(post);
     } catch (err) {
       console.error('新增貼文失敗:', err);
+      if (err instanceof NotFoundException) throw err;
       throw new InternalServerErrorException('新增貼文時發生錯誤');
     }
   }
