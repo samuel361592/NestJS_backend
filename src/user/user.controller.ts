@@ -83,14 +83,18 @@ export class UserController {
   ) {
     const user = req.user as JwtPayload;
     const isAdmin = user.roles?.includes('admin');
-
     if (!isAdmin) {
       throw new ForbiddenException({
         errorCode: ErrorCode.UnauthorizedRoleChange,
         message: '只有 admin 可以更改角色',
       });
     }
-
+    if (user.id === +id) {
+      throw new ForbiddenException({
+        errorCode: ErrorCode.UnauthorizedRoleChange,
+        message: '不可修改自己的角色',
+      });
+    }
     return this.userService.setUserRole(id, role);
   }
 }

@@ -46,20 +46,25 @@ export class UserService {
       where: { id: userId },
       relations: ['roles'],
     });
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
+
+    const targetRole = await this.roleRepo.findOne({
+      where: { name: roleName },
+    });
+    const userRole = await this.roleRepo.findOne({ where: { name: 'user' } });
+
+    if (!targetRole || !userRole) throw new NotFoundException('Role not found');
+
+    const roleNames = user.roles.map((r) => r.name);
+    const updatedRoles = new Map<string, typeof targetRole>();
+    updatedRoles.set('user', userRole);
+
+    if (!roleNames.includes(roleName)) {
+      updatedRoles.set(roleName, targetRole);
     }
 
-    const role = await this.roleRepo.findOne({ where: { name: roleName } });
-    if (!role) {
-      throw new NotFoundException('Role not found');
-    }
-
-    const alreadyHas = user.roles.some((r) => r.id === role.id);
-    if (!alreadyHas) {
-      user.roles.push(role);
-      await this.userRepo.save(user);
-    }
+    user.roles = Array.from(updatedRoles.values());
+    await this.userRepo.save(user);
 
     return {
       id: user.id,

@@ -1,20 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { RolesGuard } from './common/guards/roles.guard';
-import { Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalGuards(new RolesGuard(new Reflector()));
 
   app.enableCors({
     origin: true,
     credentials: true,
   });
+
   app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()

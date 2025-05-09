@@ -24,5 +24,4 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
 });
-
 console.log('正在使用資料庫：', dbName);
