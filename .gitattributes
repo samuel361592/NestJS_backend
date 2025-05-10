@@ -1,0 +1,15 @@
+# 統一所有文字檔案使用 LF
+* text=auto eol=lf
+
+# 對特定副檔名強制使用 LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# 忽略二進位檔案的換行轉換
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
