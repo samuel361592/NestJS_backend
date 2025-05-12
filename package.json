@@ -24,7 +24,7 @@
     "typeorm:migration:revert": "typeorm migration:revert",
     "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate src/migrations/update-user-role -d src/data-source.ts",
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
-    "migration:generate:init": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate src/migrations/init -d src/data-source.ts"
+    "migration:create:init": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create src/migrations/init"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
