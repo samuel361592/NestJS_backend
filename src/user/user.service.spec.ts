@@ -26,6 +26,11 @@ describe('UserService', () => {
     name: 'admin',
   } as Role;
 
+  const userRole = {
+    id: 2,
+    name: 'user',
+  } as Role;
+
   beforeEach(async () => {
     userRepo = {
       find: jest.fn(),
@@ -50,7 +55,7 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
   });
 
-  it('should return all users with roles', async () => {
+  it('應回傳所有使用者角色', async () => {
     userRepo.find!.mockResolvedValue([{ ...sampleUser, roles: [sampleRole] }]);
 
     const result = await service.findAll();
@@ -58,42 +63,52 @@ describe('UserService', () => {
   });
 
   describe('setUserRole', () => {
-    it('should throw NotFoundException if user not found', async () => {
+    it('若找不到使用者應拋出 NotFoundException', async () => {
       userRepo.findOne!.mockResolvedValue(null);
       await expect(service.setUserRole(1, 'admin')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should throw NotFoundException if role not found', async () => {
+    it('若找不到角色應拋出 NotFoundException', async () => {
       userRepo.findOne!.mockResolvedValue(sampleUser);
-      roleRepo.findOne!.mockResolvedValue(null);
+      roleRepo
+        .findOne!.mockResolvedValueOnce(sampleRole) // targetRole
+        .mockResolvedValueOnce(null); // userRole
+
       await expect(service.setUserRole(1, 'admin')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should assign role if not already assigned', async () => {
+    it('應加入新角色若尚未存在', async () => {
       const userWithNoRoles = { ...sampleUser, roles: [] };
       userRepo.findOne!.mockResolvedValue(userWithNoRoles);
-      roleRepo.findOne!.mockResolvedValue(sampleRole);
+      roleRepo
+        .findOne!.mockResolvedValueOnce(sampleRole) // admin
+        .mockResolvedValueOnce(userRole); // user
+
       userRepo.save!.mockResolvedValue({
         ...userWithNoRoles,
-        roles: [sampleRole],
+        roles: [userRole, sampleRole],
       });
 
       const result = await service.setUserRole(1, 'admin');
       expect(result.roles).toContain('admin');
+      expect(result.roles).toContain('user');
       expect(userRepo.save).toHaveBeenCalled();
     });
 
-    it('should not assign role again if already assigned', async () => {
-      const userWithRole = { ...sampleUser, roles: [sampleRole] };
+    it('若已擁有角色則不應再次儲存', async () => {
+      const userWithRole = { ...sampleUser, roles: [sampleRole, userRole] };
       userRepo.findOne!.mockResolvedValue(userWithRole);
-      roleRepo.findOne!.mockResolvedValue(sampleRole);
+      roleRepo
+        .findOne!.mockResolvedValueOnce(sampleRole) // admin
+        .mockResolvedValueOnce(userRole); // user
 
       const result = await service.setUserRole(1, 'admin');
       expect(result.roles).toContain('admin');
+      expect(result.roles).toContain('user');
       expect(userRepo.save).not.toHaveBeenCalled();
     });
   });

@@ -47,7 +47,15 @@ export class UserController {
     },
   })
   @Get()
-  getAllUsers() {
+  getAllUsers(): Promise<{
+    users: {
+      id: number;
+      name: string;
+      email: string;
+      age: number;
+      roles: string[];
+    }[];
+  }> {
     return this.userService.findAll();
   }
 
@@ -80,7 +88,7 @@ export class UserController {
     @Param('id') id: number,
     @Body('role') role: string,
     @Request() req: ExpressRequest,
-  ) {
+  ): Promise<{ message: string }> {
     const user = req.user as JwtPayload;
     const isAdmin = user.roles?.includes('admin');
     if (!isAdmin) {
@@ -95,6 +103,7 @@ export class UserController {
         message: '不可修改自己的角色',
       });
     }
-    return this.userService.setUserRole(id, role);
+    await this.userService.setUserRole(id, role);
+    return { message: '角色更新成功' };
   }
 }

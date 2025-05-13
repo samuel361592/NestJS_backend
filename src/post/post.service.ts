@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,7 +10,6 @@ import { Post } from '../entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { User } from '../entities/user.entity';
-import { InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class PostService {
@@ -20,18 +20,18 @@ export class PostService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  findAll() {
+  findAll(): Promise<Post[]> {
     return this.postRepo.find({ relations: ['user'] });
   }
 
-  findOne(id: number) {
+  findOne(id: number): Promise<Post | null> {
     return this.postRepo.findOne({
       where: { id },
       relations: ['user'],
     });
   }
 
-  async create(dto: CreatePostDto, userId: number) {
+  async create(dto: CreatePostDto, userId: number): Promise<Post> {
     try {
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) throw new NotFoundException('找不到使用者');
@@ -49,7 +49,7 @@ export class PostService {
     id: number,
     dto: UpdatePostDto,
     user: { id: number; roles: string[] },
-  ) {
+  ): Promise<Post> {
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['user'],
@@ -63,7 +63,10 @@ export class PostService {
     return this.postRepo.save({ ...post, ...dto });
   }
 
-  async remove(id: number, user: { id: number; roles: string[] }) {
+  async remove(
+    id: number,
+    user: { id: number; roles: string[] },
+  ): Promise<Post> {
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['user'],
@@ -74,6 +77,7 @@ export class PostService {
       throw new ForbiddenException('You can only delete your own post');
     }
 
-    return this.postRepo.remove(post);
+    await this.postRepo.remove(post);
+    return post;
   }
 }

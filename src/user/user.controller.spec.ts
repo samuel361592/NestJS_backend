@@ -66,7 +66,7 @@ describe('UserController', () => {
 
     it('should call userService.setUserRole if user is admin', async () => {
       mockUserService.setUserRole.mockResolvedValue({
-        message: 'Role updated',
+        message: '角色更新成功',
       });
 
       const result = await controller.setUserRole(
@@ -74,7 +74,7 @@ describe('UserController', () => {
         'admin',
         mockRequest(adminUser),
       );
-      expect(result).toEqual({ message: 'Role updated' });
+      expect(result).toEqual({ message: '角色更新成功' });
       expect(mockUserService.setUserRole).toHaveBeenCalledWith(3, 'admin');
     });
   });

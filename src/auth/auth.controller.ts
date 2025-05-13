@@ -45,7 +45,9 @@ export class AuthController {
       },
     },
   })
-  register(@Body() registerDto: RegisterDto) {
+  register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<{ message: string; token: string }> {
     return this.authService.register(registerDto);
   }
 
@@ -68,7 +70,7 @@ export class AuthController {
       },
     },
   })
-  login(@Body() loginDto: LoginDto) {
+  login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
     return this.authService.login(loginDto);
   }
 

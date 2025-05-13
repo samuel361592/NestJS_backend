@@ -77,7 +77,7 @@ describe('PostController', () => {
   });
 
   it('should delete a post', async () => {
-    const deletedResult = { message: 'deleted' };
+    const deletedResult = { message: '貼文刪除成功' };
     mockPostService.remove.mockResolvedValue(deletedResult);
 
     const result = await controller.deletePost(1, mockRequest);

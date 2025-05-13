@@ -4,6 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 
+interface FlatUserDto {
+  id: number;
+  name: string;
+  email: string;
+  age: number;
+  roles: string[];
+}
+
 @Injectable()
 export class UserService {
   constructor(
@@ -14,7 +22,7 @@ export class UserService {
     private readonly roleRepo: Repository<Role>,
   ) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     const roles = ['admin', 'user'];
     for (const name of roles) {
       const exists = await this.roleRepo.findOneBy({ name });
@@ -25,7 +33,7 @@ export class UserService {
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<{ users: FlatUserDto[] }> {
     const users = await this.userRepo.find({
       relations: ['roles'],
     });
@@ -41,7 +49,7 @@ export class UserService {
     return { users: result };
   }
 
-  async setUserRole(userId: number, roleName: string) {
+  async setUserRole(userId: number, roleName: string): Promise<FlatUserDto> {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['roles'],
@@ -55,12 +63,30 @@ export class UserService {
 
     if (!targetRole || !userRole) throw new NotFoundException('Role not found');
 
-    const roleNames = user.roles.map((r) => r.name);
-    const updatedRoles = new Map<string, typeof targetRole>();
+    const updatedRoles = new Map<string, Role>();
+
+    // 保留原有角色
+    user.roles.forEach((r) => updatedRoles.set(r.name, r));
+
+    // 確保一定有 user 角色
     updatedRoles.set('user', userRole);
 
-    if (!roleNames.includes(roleName)) {
-      updatedRoles.set(roleName, targetRole);
+    // 新增指定角色（如果不存在）
+    updatedRoles.set(roleName, targetRole);
+
+    const newRoleNames = Array.from(updatedRoles.keys()).sort();
+    const currentRoleNames = user.roles.map((r) => r.name).sort();
+
+    const isSame =
+      JSON.stringify(currentRoleNames) === JSON.stringify(newRoleNames);
+    if (isSame) {
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        age: user.age,
+        roles: currentRoleNames,
+      };
     }
 
     user.roles = Array.from(updatedRoles.values());
@@ -75,7 +101,7 @@ export class UserService {
     };
   }
 
-  async assignRole(userId: number, roleName: string) {
+  async assignRole(userId: number, roleName: string): Promise<FlatUserDto> {
     return this.setUserRole(userId, roleName);
   }
 }

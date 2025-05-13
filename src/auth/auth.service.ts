@@ -14,6 +14,14 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 
+interface JwtPayload {
+  id: number;
+  email: string;
+  name: string;
+  age: number;
+  roles: string[];
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -27,10 +35,13 @@ export class AuthService {
   ) {}
 
   /** 註冊：直接把 user.roles 設為 [role] */
-  async register(dto: RegisterDto) {
+  async register(
+    dto: RegisterDto,
+  ): Promise<{ message: string; token: string }> {
     const { email, password, name, age } = dto;
 
-    if (await this.userRepository.findOne({ where: { email } })) {
+    const exists = await this.userRepository.findOne({ where: { email } });
+    if (exists) {
       throw new ConflictException({
         errorCode: ErrorCode.EmailAlreadyExists,
         message: '此信箱已被註冊，請使用其他信箱',
@@ -50,17 +61,18 @@ export class AuthService {
       password: hashed,
       name,
       age,
-      roles: [role], // ← 這裡直接關聯
+      roles: [role],
     });
     await this.userRepository.save(user);
 
-    const payload = {
+    const payload: JwtPayload = {
       id: user.id,
       email: user.email,
       name: user.name,
       age: user.age,
       roles: user.roles.map((r) => r.name),
     };
+
     return {
       message: '註冊成功',
       token: this.jwtService.sign(payload),
@@ -68,7 +80,7 @@ export class AuthService {
   }
 
   /** 登入：relations: ['roles'] */
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<{ token: string }> {
     const { email, password } = dto;
     const user = await this.userRepository.findOne({
       where: { email },
@@ -80,18 +92,19 @@ export class AuthService {
       throw new UnauthorizedException('密碼錯誤');
     }
 
-    const payload = {
+    const payload: JwtPayload = {
       id: user.id,
       email: user.email,
       name: user.name,
       age: user.age,
       roles: user.roles.map((r) => r.name),
     };
+
     return { token: this.jwtService.sign(payload) };
   }
 
   /** 取得 profile，同樣用 relations: ['roles'] */
-  async getProfile(userId: number) {
+  async getProfile(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['roles'],

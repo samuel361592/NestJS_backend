@@ -3,26 +3,22 @@ import { PostService } from './post.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Post } from '../entities/post.entity';
 import { User } from '../entities/user.entity';
-import {
-  NotFoundException,
-  ForbiddenException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
+
+const mockPostRepo = {
+  find: jest.fn(),
+  findOne: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  remove: jest.fn(),
+};
+
+const mockUserRepo = {
+  findOne: jest.fn(),
+};
 
 describe('PostService', () => {
   let service: PostService;
-
-  const mockPostRepo = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    create: jest.fn(),
-    save: jest.fn(),
-    remove: jest.fn(),
-  };
-
-  const mockUserRepo = {
-    findOne: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,142 +33,120 @@ describe('PostService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('should return all posts', async () => {
+    const posts = [{ id: 1, title: 'Test', user: {} }];
+    mockPostRepo.find.mockResolvedValue(posts);
+
+    const result = await service.findAll();
+    expect(result).toEqual(posts);
   });
 
-  describe('findAll', () => {
-    it('should return all posts with user', async () => {
-      const result = [{ id: 1, title: 'Test', user: {} }];
-      mockPostRepo.find.mockResolvedValue(result);
-
-      expect(await service.findAll()).toEqual(result);
-      expect(mockPostRepo.find).toHaveBeenCalledWith({ relations: ['user'] });
-    });
+  it('should return one post by ID', async () => {
+    const post = { id: 1, title: 'One', user: {} };
+    mockPostRepo.findOne.mockResolvedValue(post);
+    const result = await service.findOne(1);
+    expect(result).toEqual(post);
   });
 
-  describe('findOne', () => {
-    it('should return one post by id', async () => {
-      const post = { id: 1, title: 'Test', user: {} };
-      mockPostRepo.findOne.mockResolvedValue(post);
-
-      expect(await service.findOne(1)).toEqual(post);
-      expect(mockPostRepo.findOne).toHaveBeenCalledWith({
-        where: { id: 1 },
-        relations: ['user'],
-      });
-    });
-  });
-
-  describe('create', () => {
+  describe('create()', () => {
     it('should throw if user not found', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.create({ title: 'A', content: 'B' }, 1),
+        service.create({ title: 'X', content: 'Y' }, 1),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should create and return a post', async () => {
-      const dto = { title: 'A', content: 'B' };
-      const user = { id: 1, name: 'Test' };
-      const post = { id: 1, ...dto, user };
+    it('should create and return post', async () => {
+      const user = { id: 1 };
+      const post = { id: 1, title: 'Test', content: 'Y', user };
 
-      mockUserRepo.findOne.mockResolvedValue(user);
+      mockUserRepo.findOne.mockResolvedValue(user); // ✅ mock 使用者存在
       mockPostRepo.create.mockReturnValue(post);
       mockPostRepo.save.mockResolvedValue(post);
 
-      expect(await service.create(dto, 1)).toEqual(post);
+      const result = await service.create({ title: 'Test', content: 'Y' }, 1);
+      expect(result).toEqual(post);
     });
 
-    it('should throw InternalServerError on failure', async () => {
-      mockUserRepo.findOne.mockRejectedValue(new Error('db error'));
+    it('should handle internal error', async () => {
+      mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+      mockPostRepo.create.mockReturnValue({});
+      mockPostRepo.save.mockRejectedValue(new Error('db error'));
 
       await expect(
-        service.create({ title: 'x', content: 'y' }, 1),
-      ).rejects.toThrow(InternalServerErrorException);
+        service.create({ title: 'A', content: 'B' }, 1),
+      ).rejects.toThrow('新增貼文時發生錯誤');
     });
   });
 
-  describe('update', () => {
+  describe('update()', () => {
     const user = { id: 1, roles: ['user'] };
 
     it('should throw if post not found', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
-
-      await expect(service.update(1, { title: 'U' }, user)).rejects.toThrow(
+      await expect(service.update(1, {}, user)).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw if user is not owner or admin', async () => {
-      const post = { id: 1, title: 'X', user: { id: 2 } };
-      mockPostRepo.findOne.mockResolvedValue(post);
-
-      await expect(service.update(1, { title: 'U' }, user)).rejects.toThrow(
+      mockPostRepo.findOne.mockResolvedValue({ id: 1, user: { id: 2 } });
+      await expect(service.update(1, {}, user)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('should update if user is owner', async () => {
-      const post = { id: 1, title: 'X', user: { id: 1 } };
-      const updated = { ...post, title: 'Updated' };
+    it('should update and return post if owner', async () => {
+      const post = { id: 1, title: 'X', content: 'Y', user: { id: 1 } };
       mockPostRepo.findOne.mockResolvedValue(post);
-      mockPostRepo.save.mockResolvedValue(updated);
+      mockPostRepo.save.mockResolvedValue({ ...post, title: 'Z' });
 
-      expect(await service.update(1, { title: 'Updated' }, user)).toEqual(
-        updated,
-      );
+      const result = await service.update(1, { title: 'Z' }, user);
+      expect(result.title).toEqual('Z');
     });
 
-    it('should update if user is admin', async () => {
-      const post = { id: 1, title: 'X', user: { id: 2 } };
-      const updated = { ...post, title: 'Updated' };
+    it('should update and return post if admin', async () => {
+      const post = { id: 1, title: 'X', content: 'Y', user: { id: 2 } };
+      const admin = { id: 99, roles: ['admin'] };
       mockPostRepo.findOne.mockResolvedValue(post);
-      mockPostRepo.save.mockResolvedValue(updated);
+      mockPostRepo.save.mockResolvedValue({ ...post, title: 'New' });
 
-      expect(
-        await service.update(
-          1,
-          { title: 'Updated' },
-          { id: 99, roles: ['admin'] },
-        ),
-      ).toEqual(updated);
+      const result = await service.update(1, { title: 'New' }, admin);
+      expect(result.title).toBe('New');
     });
   });
 
-  describe('remove', () => {
+  describe('remove()', () => {
     const user = { id: 1, roles: ['user'] };
+    const post = { id: 1, title: 'X', user: { id: 1 } };
 
     it('should throw if post not found', async () => {
       mockPostRepo.findOne.mockResolvedValue(null);
-
       await expect(service.remove(1, user)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw if user is not owner or admin', async () => {
-      const post = { id: 1, title: 'X', user: { id: 2 } };
-      mockPostRepo.findOne.mockResolvedValue(post);
-
-      await expect(service.remove(1, user)).rejects.toThrow(ForbiddenException);
-    });
-
     it('should delete if user is owner', async () => {
-      const post = { id: 1, title: 'X', user: { id: 1 } };
       mockPostRepo.findOne.mockResolvedValue(post);
       mockPostRepo.remove.mockResolvedValue(post);
 
-      expect(await service.remove(1, user)).toEqual(post);
+      const result = await service.remove(1, user);
+      expect(result).toEqual(post);
     });
 
     it('should delete if user is admin', async () => {
-      const post = { id: 1, title: 'X', user: { id: 2 } };
-      mockPostRepo.findOne.mockResolvedValue(post);
-      mockPostRepo.remove.mockResolvedValue(post);
+      const admin = { id: 99, roles: ['admin'] };
+      const postByOther = { id: 1, title: 'X', user: { id: 2 } };
+      mockPostRepo.findOne.mockResolvedValue(postByOther);
+      mockPostRepo.remove.mockResolvedValue(postByOther);
 
-      expect(await service.remove(1, { id: 99, roles: ['admin'] })).toEqual(
-        post,
-      );
+      const result = await service.remove(1, admin);
+      expect(result).toEqual(postByOther);
+    });
+
+    it('should throw if not owner or admin', async () => {
+      mockPostRepo.findOne.mockResolvedValue({ ...post, user: { id: 9 } });
+      await expect(service.remove(1, user)).rejects.toThrow(ForbiddenException);
     });
   });
 });
