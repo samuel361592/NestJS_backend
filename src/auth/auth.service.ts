@@ -26,7 +26,7 @@ interface JwtPayload {
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepo: Repository<User>,
 
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
@@ -40,7 +40,7 @@ export class AuthService {
   ): Promise<{ message: string; token: string }> {
     const { email, password, name, age } = dto;
 
-    const exists = await this.userRepository.findOne({ where: { email } });
+    const exists = await this.userRepo.findOne({ where: { email } });
     if (exists) {
       throw new ConflictException({
         errorCode: ErrorCode.EmailAlreadyExists,
@@ -56,14 +56,14 @@ export class AuthService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({
+    const user = this.userRepo.create({
       email,
       password: hashed,
       name,
       age,
       roles: [role],
     });
-    await this.userRepository.save(user);
+    await this.userRepo.save(user);
 
     const payload: JwtPayload = {
       id: user.id,
@@ -82,7 +82,7 @@ export class AuthService {
   /** 登入：relations: ['roles'] */
   async login(dto: LoginDto): Promise<{ token: string }> {
     const { email, password } = dto;
-    const user = await this.userRepository.findOne({
+    const user = await this.userRepo.findOne({
       where: { email },
       select: ['id', 'email', 'name', 'age', 'password'],
       relations: ['roles'],
@@ -105,7 +105,7 @@ export class AuthService {
 
   /** 取得 profile，同樣用 relations: ['roles'] */
   async getProfile(userId: number): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['roles'],
     });

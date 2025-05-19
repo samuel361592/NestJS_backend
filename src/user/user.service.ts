@@ -65,29 +65,11 @@ export class UserService {
 
     const updatedRoles = new Map<string, Role>();
 
-    // 保留原有角色
     user.roles.forEach((r) => updatedRoles.set(r.name, r));
 
-    // 確保一定有 user 角色
     updatedRoles.set('user', userRole);
 
-    // 新增指定角色（如果不存在）
     updatedRoles.set(roleName, targetRole);
-
-    const newRoleNames = Array.from(updatedRoles.keys()).sort();
-    const currentRoleNames = user.roles.map((r) => r.name).sort();
-
-    const isSame =
-      JSON.stringify(currentRoleNames) === JSON.stringify(newRoleNames);
-    if (isSame) {
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        age: user.age,
-        roles: currentRoleNames,
-      };
-    }
 
     user.roles = Array.from(updatedRoles.values());
     await this.userRepo.save(user);
@@ -99,9 +81,5 @@ export class UserService {
       age: user.age,
       roles: user.roles.map((r) => r.name),
     };
-  }
-
-  async assignRole(userId: number, roleName: string): Promise<FlatUserDto> {
-    return this.setUserRole(userId, roleName);
   }
 }

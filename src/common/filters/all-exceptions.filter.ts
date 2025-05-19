@@ -10,7 +10,7 @@ import { ErrorCode } from '../errors/error-codes.enum';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -23,7 +23,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
-
       const res = exception.getResponse();
 
       if (exception instanceof BadRequestException) {
@@ -34,7 +33,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message?: string;
           errorCode?: string;
         };
+
         if (message) responseMessage = message;
+
         if (
           errorCode &&
           Object.values(ErrorCode).includes(errorCode as ErrorCode)
