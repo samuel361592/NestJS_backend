@@ -9,18 +9,10 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { Role } from '../entities/role.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
-
-interface JwtPayload {
-  id: number;
-  email: string;
-  name: string;
-  age: number;
-  roles: string[];
-}
+import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class AuthService {
@@ -28,13 +20,11 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
-    @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
+    private readonly roleService: RoleService,
 
     private readonly jwtService: JwtService,
   ) {}
 
-  /** 註冊：直接把 user.roles 設為 [role] */
   async register(
     dto: RegisterDto,
   ): Promise<{ message: string; token: string }> {
@@ -48,9 +38,7 @@ export class AuthService {
       });
     }
 
-    const role = await this.roleRepository.findOne({
-      where: { name: 'user' },
-    });
+    const role = await this.roleService.findByName('user');
     if (!role) {
       throw new NotFoundException('找不到 user 角色，請先建立角色');
     }
@@ -65,7 +53,7 @@ export class AuthService {
     });
     await this.userRepo.save(user);
 
-    const payload: JwtPayload = {
+    const payload: Express.User = {
       id: user.id,
       email: user.email,
       name: user.name,
@@ -79,7 +67,6 @@ export class AuthService {
     };
   }
 
-  /** 登入：relations: ['roles'] */
   async login(dto: LoginDto): Promise<{ token: string }> {
     const { email, password } = dto;
     const user = await this.userRepo.findOne({
@@ -92,7 +79,7 @@ export class AuthService {
       throw new UnauthorizedException('密碼錯誤');
     }
 
-    const payload: JwtPayload = {
+    const payload: Express.User = {
       id: user.id,
       email: user.email,
       name: user.name,
@@ -103,7 +90,6 @@ export class AuthService {
     return { token: this.jwtService.sign(payload) };
   }
 
-  /** 取得 profile，同樣用 relations: ['roles'] */
   async getProfile(userId: number): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id: userId },

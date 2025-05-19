@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/guards/roles.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Request as ExpressRequest } from 'express';
 import {

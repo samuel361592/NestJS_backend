@@ -3,9 +3,13 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+
+export const Roles = (...roles: string[]): ReturnType<typeof SetMetadata> =>
+  SetMetadata('roles', roles);
 
 @Injectable()
 export class RolesGuard implements CanActivate {

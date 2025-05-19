@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 interface FlatUserDto {
   id: number;
@@ -13,21 +14,20 @@ interface FlatUserDto {
 }
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
-    @InjectRepository(Role)
-    private readonly roleRepo: Repository<Role>,
+    private readonly roleService: RoleService,
   ) {}
 
   async onModuleInit(): Promise<void> {
     const roles = ['admin', 'user'];
     for (const name of roles) {
-      const exists = await this.roleRepo.findOneBy({ name });
+      const exists = await this.roleService.findByName(name);
       if (!exists) {
-        await this.roleRepo.save({ name });
+        await this.roleService.create({ name });
         console.log(`預設角色 "${name}" 已建立`);
       }
     }
@@ -56,19 +56,14 @@ export class UserService {
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const targetRole = await this.roleRepo.findOne({
-      where: { name: roleName },
-    });
-    const userRole = await this.roleRepo.findOne({ where: { name: 'user' } });
+    const targetRole = await this.roleService.findByName(roleName);
+    const userRole = await this.roleService.findByName('user');
 
     if (!targetRole || !userRole) throw new NotFoundException('Role not found');
 
     const updatedRoles = new Map<string, Role>();
-
     user.roles.forEach((r) => updatedRoles.set(r.name, r));
-
     updatedRoles.set('user', userRole);
-
     updatedRoles.set(roleName, targetRole);
 
     user.roles = Array.from(updatedRoles.values());

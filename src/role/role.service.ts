@@ -22,6 +22,10 @@ export class RoleService {
     return role;
   }
 
+  async findByName(name: string): Promise<Role | null> {
+    return this.roleRepo.findOne({ where: { name } });
+  }
+
   async create(dto: CreateRoleDto): Promise<Role> {
     const exists = await this.roleRepo.findOneBy({ name: dto.name });
     if (exists) throw new Error('Role already exists');
