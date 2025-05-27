@@ -1,26 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { ForbiddenException } from '@nestjs/common';
-import { JwtPayload } from '../auth/jwt.strategy';
-import { Request as ExpressRequest } from 'express';
+import { Request } from 'express';
+import { IdDto } from './dto/id.dto';
+import { SetRoleDto } from './dto/set-role.dto';
 
 describe('UserController', () => {
   let controller: UserController;
-  let mockUserService: { findAll: jest.Mock; setUserRole: jest.Mock };
 
-  const mockRequest = (user: JwtPayload): ExpressRequest => {
-    return {
-      user,
-    } as unknown as ExpressRequest;
+  const mockUserService = {
+    findAll: jest.fn().mockResolvedValue({
+      users: [
+        {
+          id: 1,
+          name: 'Alice',
+          email: 'alice@example.com',
+          age: 30,
+          roles: [
+            { id: 1, name: 'admin' },
+            { id: 2, name: 'user' },
+          ],
+        },
+      ],
+    }),
+    setUserRole: jest.fn().mockResolvedValue({}),
   };
 
   beforeEach(async () => {
-    mockUserService = {
-      findAll: jest.fn(),
-      setUserRole: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
       providers: [{ provide: UserService, useValue: mockUserService }],
@@ -29,53 +35,54 @@ describe('UserController', () => {
     controller = module.get<UserController>(UserController);
   });
 
-  it('should return all users (admin only)', async () => {
-    const users = [{ id: 1, email: 'admin@example.com' }];
-    mockUserService.findAll.mockResolvedValue(users);
-
+  it('should return all users', async () => {
     const result = await controller.getAllUsers();
-    expect(result).toEqual(users);
+    expect(result.users).toHaveLength(1);
+    expect(mockUserService.findAll).toHaveBeenCalled();
   });
 
-  describe('setUserRole', () => {
-    const adminUser: JwtPayload = {
-      id: 1,
-      email: 'admin@example.com',
-      name: 'Admin',
-      age: 30,
-      roles: ['admin'],
-      iat: 0,
-      exp: 0,
-    };
+  it('should allow admin to set role', async () => {
+    const idDto: IdDto = { id: 2 };
+    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const mockRequest = {
+      user: {
+        id: 1,
+        roles: ['admin'],
+      },
+    } as unknown as Request;
 
-    const normalUser: JwtPayload = {
-      id: 2,
-      email: 'user@example.com',
-      name: 'User',
-      age: 25,
-      roles: ['user'],
-      iat: 0,
-      exp: 0,
-    };
+    const result = await controller.setUserRole(idDto, setRoleDto, mockRequest);
+    expect(result).toEqual({ message: '角色更新成功' });
+    expect(mockUserService.setUserRole).toHaveBeenCalledWith(2, 'admin');
+  });
 
-    it('should throw ForbiddenException if user is not admin', async () => {
-      await expect(
-        controller.setUserRole(3, 'admin', mockRequest(normalUser)),
-      ).rejects.toThrow(ForbiddenException);
-    });
+  it('should not allow non-admin to set role', async () => {
+    const idDto: IdDto = { id: 2 };
+    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const mockRequest = {
+      user: {
+        id: 1,
+        roles: ['user'],
+      },
+    } as unknown as Request;
 
-    it('should call userService.setUserRole if user is admin', async () => {
-      mockUserService.setUserRole.mockResolvedValue({
-        message: '角色更新成功',
-      });
+    await expect(
+      controller.setUserRole(idDto, setRoleDto, mockRequest),
+    ).rejects.toThrow();
+  });
 
-      const result = await controller.setUserRole(
-        3,
-        'admin',
-        mockRequest(adminUser),
-      );
-      expect(result).toEqual({ message: '角色更新成功' });
-      expect(mockUserService.setUserRole).toHaveBeenCalledWith(3, 'admin');
-    });
+  it('should not allow admin to set their own role', async () => {
+    const idDto: IdDto = { id: 1 };
+    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const mockRequest = {
+      user: {
+        id: 1,
+        roles: ['admin'],
+      },
+    } as unknown as Request;
+
+    await expect(
+      controller.setUserRole(idDto, setRoleDto, mockRequest),
+    ).rejects.toThrow();
   });
 });

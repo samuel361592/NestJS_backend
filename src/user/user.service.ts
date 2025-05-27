@@ -1,20 +1,19 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 
-interface FlatUserDto {
-  id: number;
-  name: string;
-  email: string;
-  age: number;
-  roles: string[];
-}
-
 @Injectable()
 export class UserService implements OnModuleInit {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -28,28 +27,20 @@ export class UserService implements OnModuleInit {
       const exists = await this.roleService.findByName(name);
       if (!exists) {
         await this.roleService.create({ name });
-        console.log(`預設角色 "${name}" 已建立`);
+        this.logger.log(`預設角色 "${name}" 已建立`);
       }
     }
   }
 
-  async findAll(): Promise<{ users: FlatUserDto[] }> {
+  async findAll(): Promise<{ users: User[] }> {
     const users = await this.userRepo.find({
       relations: ['roles'],
     });
 
-    const result = users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      age: u.age,
-      roles: u.roles.map((r) => r.name),
-    }));
-
-    return { users: result };
+    return { users };
   }
 
-  async setUserRole(userId: number, roleName: string): Promise<FlatUserDto> {
+  async setUserRole(userId: number, roleName: string): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['roles'],
@@ -69,12 +60,6 @@ export class UserService implements OnModuleInit {
     user.roles = Array.from(updatedRoles.values());
     await this.userRepo.save(user);
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      age: user.age,
-      roles: user.roles.map((r) => r.name),
-    };
+    return user;
   }
 }

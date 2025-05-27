@@ -10,20 +10,20 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles, RolesGuard } from '../common/guards/roles.guard';
 import { Request as ExpressRequest } from 'express';
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
-  ApiParam,
-  ApiBody,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 import { JwtPayload } from '../auth/jwt.strategy';
+import { User } from '../entities/user.entity';
+import { IdDto } from './dto/id.dto';
+import { SetRoleDto } from './dto/set-role.dto';
 
 @ApiTags('User')
 @Controller('users')
@@ -34,7 +34,26 @@ export class UserController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: '取得所有使用者（僅限 admin）' })
-  @ApiResponse({ status: 200, description: '成功取得所有使用者' })
+  @ApiResponse({
+    status: 200,
+    description: '成功取得所有使用者',
+    schema: {
+      example: {
+        users: [
+          {
+            id: 1,
+            name: 'Alice',
+            email: 'alice@example.com',
+            age: 30,
+            roles: [
+              { id: 1, name: 'admin' },
+              { id: 2, name: 'user' },
+            ],
+          },
+        ],
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: '只有 admin 可以取得所有使用者',
@@ -47,30 +66,13 @@ export class UserController {
     },
   })
   @Get()
-  getAllUsers(): Promise<{
-    users: {
-      id: number;
-      name: string;
-      email: string;
-      age: number;
-      roles: string[];
-    }[];
-  }> {
+  getAllUsers(): Promise<{ users: User[] }> {
     return this.userService.findAll();
   }
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '設定使用者角色（僅限 admin）' })
-  @ApiParam({ name: 'id', type: Number, description: '使用者 ID' })
-  @ApiBody({
-    schema: {
-      example: {
-        role: 'admin',
-      },
-    },
-    description: '要設定的角色（如 admin / user）',
-  })
   @ApiResponse({ status: 200, description: '成功修改使用者角色' })
   @ApiResponse({
     status: 403,
@@ -85,8 +87,8 @@ export class UserController {
   })
   @Patch(':id/role')
   async setUserRole(
-    @Param('id') id: number,
-    @Body('role') role: string,
+    @Param() { id }: IdDto,
+    @Body() { role }: SetRoleDto,
     @Request() req: ExpressRequest,
   ): Promise<{ message: string }> {
     const user = req.user as JwtPayload;
@@ -97,7 +99,7 @@ export class UserController {
         message: '只有 admin 可以更改角色',
       });
     }
-    if (user.id === +id) {
+    if (user.id === id) {
       throw new ForbiddenException({
         errorCode: ErrorCode.UnauthorizedRoleChange,
         message: '不可修改自己的角色',

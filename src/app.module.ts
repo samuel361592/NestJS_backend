@@ -17,7 +17,6 @@ import { RoleModule } from './role/role.module';
       url: process.env.DATABASE_URL,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
-      migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
 
     AuthModule,

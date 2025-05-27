@@ -8,6 +8,11 @@ import {
 import { Request, Response } from 'express';
 import { ErrorCode } from '../errors/error-codes.enum';
 
+interface ErrorResponseShape {
+  message?: string;
+  errorCode?: string;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -29,12 +34,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         responseErrorCode = ErrorCode.InvalidRegisterFormat;
         responseMessage = '信箱、密碼、名稱等欄位格式錯誤';
       } else if (typeof res === 'object' && res !== null) {
-        const { message, errorCode } = res as {
-          message?: string;
-          errorCode?: string;
-        };
+        const { message, errorCode } = res as ErrorResponseShape;
 
-        if (message) responseMessage = message;
+        if (message) {
+          responseMessage = message;
+        }
 
         if (
           errorCode &&
