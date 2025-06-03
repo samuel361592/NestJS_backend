@@ -19,6 +19,7 @@ import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role } from '../entities/role.entity';
+import { IdParamDto } from './dto/id-param.dto';
 
 @ApiTags('Role')
 @Controller('roles')
@@ -43,8 +44,8 @@ export class RoleController {
     type: Role,
   })
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Role> {
-    return this.roleService.findOne(+id);
+  findOne(@Param() params: IdParamDto): Promise<Role> {
+    return this.roleService.findOne(params.id);
   }
 
   @ApiOperation({ summary: '新增角色' })
@@ -64,15 +65,18 @@ export class RoleController {
     type: Role,
   })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateRoleDto): Promise<Role> {
-    return this.roleService.update(+id, dto);
+  update(
+    @Param() params: IdParamDto,
+    @Body() dto: UpdateRoleDto,
+  ): Promise<Role> {
+    return this.roleService.update(params.id, dto);
   }
 
   @ApiOperation({ summary: '刪除角色' })
   @ApiParam({ name: 'id', description: '要刪除的角色 ID' })
   @ApiNoContentResponse({ description: '成功刪除角色' })
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.roleService.remove(+id);
+  remove(@Param() params: IdParamDto): Promise<void> {
+    return this.roleService.remove(params.id);
   }
 }

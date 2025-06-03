@@ -48,7 +48,7 @@ describe('RoleController', (): void => {
 
   it('should return one role', async (): Promise<void> => {
     (mockRoleService.findOne as jest.Mock).mockResolvedValueOnce(mockRole);
-    const result: Role = await controller.findOne('1');
+    const result: Role = await controller.findOne({ id: 1 });
     expect(result).toEqual(mockRole);
     expect(mockRoleService.findOne).toHaveBeenCalledWith(1);
   });
@@ -65,14 +65,14 @@ describe('RoleController', (): void => {
     const dto: UpdateRoleDto = { name: 'updated' };
     const updated: Role = { ...mockRole, name: 'updated' };
     (mockRoleService.update as jest.Mock).mockResolvedValueOnce(updated);
-    const result: Role = await controller.update('1', dto);
+    const result: Role = await controller.update({ id: 1 }, dto);
     expect(result).toEqual(updated);
     expect(mockRoleService.update).toHaveBeenCalledWith(1, dto);
   });
 
   it('should remove a role', async (): Promise<void> => {
     (mockRoleService.remove as jest.Mock).mockResolvedValueOnce(undefined);
-    const result: void = await controller.remove('1');
+    const result: void = await controller.remove({ id: 1 });
     expect(result).toBeUndefined();
     expect(mockRoleService.remove).toHaveBeenCalledWith(1);
   });
