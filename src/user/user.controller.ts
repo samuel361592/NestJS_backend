@@ -18,7 +18,6 @@ import {
   ApiBearerAuth,
   ApiResponse,
 } from '@nestjs/swagger';
-import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 import { JwtPayload } from '../auth/jwt.strategy';
 import { User } from '../entities/user.entity';
@@ -50,6 +49,20 @@ export class UserController {
               { id: 2, name: 'user' },
             ],
           },
+          {
+            id: 2,
+            name: 'Bob',
+            email: 'bob@example.com',
+            age: 28,
+            roles: [{ id: 2, name: 'user' }],
+          },
+          {
+            id: 3,
+            name: 'Charlie',
+            email: 'charlie@example.com',
+            age: 35,
+            roles: [{ id: 3, name: 'editor' }],
+          },
         ],
       },
     },
@@ -57,10 +70,10 @@ export class UserController {
   @ApiResponse({
     status: 403,
     description: '只有 admin 可以取得所有使用者',
-    type: ErrorResponseDto,
     schema: {
       example: {
-        errorCode: ErrorCode.UnauthorizedRoleChange,
+        statusCode: 403,
+        errorCode: '403-02-01-001',
         message: '只有 admin 可以取得所有使用者',
       },
     },
@@ -73,22 +86,40 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '設定使用者角色（僅限 admin）' })
-  @ApiResponse({ status: 200, description: '成功修改使用者角色' })
   @ApiResponse({
-    status: 403,
-    description: '只有 admin 可以更改角色',
-    type: ErrorResponseDto,
+    status: 200,
+    description: '成功修改使用者角色',
     schema: {
       example: {
-        errorCode: ErrorCode.UnauthorizedRoleChange,
-        message: '只有 admin 可以更改角色',
+        message: '角色更新成功',
+        updatedUser: {
+          id: 1,
+          name: 'Alice',
+          email: 'alice@example.com',
+          age: 30,
+          roles: [
+            { id: 2, name: 'user' },
+            { id: 3, name: 'editor' },
+          ],
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: '只有 admin 可以取得所有使用者',
+    schema: {
+      example: {
+        statusCode: 403,
+        errorCode: '403-02-01-001',
+        message: '只有 admin 可以取得所有使用者',
       },
     },
   })
   @Patch(':id/role')
   async setUserRole(
     @Param() { id }: IdDto,
-    @Body() { role }: SetRoleDto,
+    @Body() { roleId }: SetRoleDto,
     @Request() req: ExpressRequest,
   ): Promise<{ message: string }> {
     const user = req.user as JwtPayload;
@@ -105,7 +136,8 @@ export class UserController {
         message: '不可修改自己的角色',
       });
     }
-    await this.userService.setUserRole(id, role);
+
+    await this.userService.setUserRoleById(id, roleId);
     return { message: '角色更新成功' };
   }
 }

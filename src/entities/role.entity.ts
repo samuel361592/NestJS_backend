@@ -5,7 +5,7 @@ import { User } from './user.entity';
 
 @Entity()
 export class Role {
-  @ApiProperty({ example: 1, description: '角色 ID' })
+  @ApiProperty({ example: 2, description: '角色 ID' })
   @PrimaryGeneratedColumn()
   id: number;
 

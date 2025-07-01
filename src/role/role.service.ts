@@ -39,8 +39,13 @@ export class RoleService {
     return this.roleRepo.save(role);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<Role> {
     const role = await this.findOne(id);
     await this.roleRepo.remove(role);
+    return role;
+  }
+
+  async findById(id: number): Promise<Role | null> {
+    return this.roleRepo.findOne({ where: { id } });
   }
 }

@@ -40,22 +40,22 @@ export class UserService implements OnModuleInit {
     return { users };
   }
 
-  async setUserRole(userId: number, roleName: string): Promise<User> {
+  async setUserRoleById(userId: number, roleId: number): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['roles'],
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const targetRole = await this.roleService.findByName(roleName);
+    const targetRole = await this.roleService.findById(roleId);
     const userRole = await this.roleService.findByName('user');
 
     if (!targetRole || !userRole) throw new NotFoundException('Role not found');
 
     const updatedRoles = new Map<string, Role>();
     user.roles.forEach((r) => updatedRoles.set(r.name, r));
-    updatedRoles.set('user', userRole);
-    updatedRoles.set(roleName, targetRole);
+    updatedRoles.set('user', userRole); // 確保保留 user 角色
+    updatedRoles.set(targetRole.name, targetRole); // 新增目標角色
 
     user.roles = Array.from(updatedRoles.values());
     await this.userRepo.save(user);
