@@ -40,26 +40,31 @@ export class UserService implements OnModuleInit {
     return { users };
   }
 
-  async setUserRoleById(userId: number, roleId: number): Promise<User> {
+  async setUserRole(userId: number, roleIds: number[]): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['roles'],
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const targetRole = await this.roleService.findById(roleId);
+    const roles: Role[] = [];
+
     const userRole = await this.roleService.findByName('user');
+    if (!userRole) throw new NotFoundException('Default role "user" not found');
+    roles.push(userRole);
 
-    if (!targetRole || !userRole) throw new NotFoundException('Role not found');
+    for (const roleId of roleIds) {
+      const role = await this.roleService.findById(roleId);
+      if (!role) throw new NotFoundException(`Role id ${roleId} not found`);
+      roles.push(role);
+    }
 
-    const updatedRoles = new Map<string, Role>();
-    user.roles.forEach((r) => updatedRoles.set(r.name, r));
-    updatedRoles.set('user', userRole); // 確保保留 user 角色
-    updatedRoles.set(targetRole.name, targetRole); // 新增目標角色
+    const uniqueRoles = Array.from(
+      new Map(roles.map((r) => [r.id, r])).values(),
+    );
+    user.roles = uniqueRoles;
 
-    user.roles = Array.from(updatedRoles.values());
     await this.userRepo.save(user);
-
     return user;
   }
 }

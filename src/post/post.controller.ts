@@ -112,7 +112,7 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @HttpPost()
-  @ApiBearerAuth()
+  @ApiBearerAuth('jwt')
   @ApiOperation({ summary: '建立新貼文（需登入）' })
   @ApiBody({ type: CreatePostDto })
   @ApiResponse({
@@ -139,7 +139,7 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  @ApiBearerAuth()
+  @ApiBearerAuth('jwt')
   @ApiOperation({ summary: '更新貼文（需登入）' })
   @ApiBody({ type: UpdatePostDto })
   @ApiResponse({
@@ -167,6 +167,7 @@ export class PostController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
   @ApiOperation({ summary: '刪除貼文（需登入）' })
   @ApiResponse({
     status: 200,

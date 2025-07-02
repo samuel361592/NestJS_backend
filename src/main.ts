@@ -18,9 +18,26 @@ async function bootstrap(): Promise<void> {
 
   const config = new DocumentBuilder()
     .setTitle('Fullstack Project API')
-    .setDescription('這是API文件')
+    .setDescription('這是 API 文件')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: '一般登入使用者的 JWT',
+      },
+      'jwt',
+    )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: '需要 admin 權限的 JWT',
+      },
+      'admin-jwt',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

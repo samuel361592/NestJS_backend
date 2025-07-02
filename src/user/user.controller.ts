@@ -17,6 +17,7 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
+  ApiParam,
 } from '@nestjs/swagger';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 import { JwtPayload } from '../auth/jwt.strategy';
@@ -31,7 +32,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('jwt')
+  @ApiBearerAuth('admin-jwt')
   @ApiOperation({ summary: '取得所有使用者（僅限 admin）' })
   @ApiResponse({
     status: 200,
@@ -84,8 +86,10 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('jwt')
+  @ApiBearerAuth('admin-jwt')
   @ApiOperation({ summary: '設定使用者角色（僅限 admin）' })
+  @ApiParam({ name: 'id', type: Number, description: '目標使用者 ID' })
   @ApiResponse({
     status: 200,
     description: '成功修改使用者角色',
@@ -96,10 +100,9 @@ export class UserController {
           id: 1,
           name: 'Alice',
           email: 'alice@example.com',
-          age: 30,
           roles: [
+            { id: 1, name: 'admin' },
             { id: 2, name: 'user' },
-            { id: 3, name: 'editor' },
           ],
         },
       },
@@ -107,21 +110,21 @@ export class UserController {
   })
   @ApiResponse({
     status: 403,
-    description: '只有 admin 可以取得所有使用者',
+    description: '權限不足或禁止操作自身角色',
     schema: {
       example: {
         statusCode: 403,
         errorCode: '403-02-01-001',
-        message: '只有 admin 可以取得所有使用者',
+        message: '只有 admin 可以更改角色',
       },
     },
   })
-  @Patch(':id/role')
+  @Patch(':id/roles')
   async setUserRole(
     @Param() { id }: IdDto,
-    @Body() { roleId }: SetRoleDto,
+    @Body() { roleIds }: SetRoleDto,
     @Request() req: ExpressRequest,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; updatedUser: any }> {
     const user = req.user as JwtPayload;
     const isAdmin = user.roles?.includes('admin');
     if (!isAdmin) {
@@ -137,7 +140,7 @@ export class UserController {
       });
     }
 
-    await this.userService.setUserRoleById(id, roleId);
-    return { message: '角色更新成功' };
+    const updatedUser = await this.userService.setUserRole(id, roleIds);
+    return { message: '角色更新成功', updatedUser };
   }
 }

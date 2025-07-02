@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, Min } from 'class-validator';
+import { IsArray, ArrayNotEmpty, IsInt } from 'class-validator';
 
 export class SetRoleDto {
-  @ApiProperty({ example: 2, description: '要指派的角色 ID' })
-  @IsInt()
-  @Min(1)
-  roleId: number;
+  @ApiProperty({ example: [1, 2], description: '角色 ID 陣列' })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  roleIds: number[];
 }
