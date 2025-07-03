@@ -34,9 +34,9 @@ async function bootstrap(): Promise<void> {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: '需要 admin 權限的 JWT',
+        description: '需要 admin 的role權限',
       },
-      'admin-jwt',
+      'admin',
     )
     .build();
 

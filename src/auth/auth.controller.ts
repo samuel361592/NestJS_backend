@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -52,6 +53,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: '使用者登入' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
@@ -76,8 +78,8 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '取得登入使用者的資料' })
+  @ApiBearerAuth('admin')
+  @ApiOperation({ summary: '取得登入使用者的資料(僅限admin)' })
   @ApiResponse({
     status: 200,
     description: '取得使用者資訊',

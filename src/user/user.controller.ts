@@ -32,8 +32,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth('jwt')
-  @ApiBearerAuth('admin-jwt')
+  @ApiBearerAuth('admin')
   @ApiOperation({ summary: '取得所有使用者（僅限 admin）' })
   @ApiResponse({
     status: 200,
@@ -86,8 +85,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('jwt')
-  @ApiBearerAuth('admin-jwt')
+  @ApiBearerAuth('admin')
   @ApiOperation({ summary: '設定使用者角色（僅限 admin）' })
   @ApiParam({ name: 'id', type: Number, description: '目標使用者 ID' })
   @ApiResponse({

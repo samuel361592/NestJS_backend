@@ -29,8 +29,7 @@ import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { ErrorCode } from '../common/errors/error-codes.enum';
 
 @ApiTags('Role')
-@ApiBearerAuth('jwt')
-@ApiBearerAuth('admin-jwt')
+@ApiBearerAuth('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('roles')
 export class RoleController {
