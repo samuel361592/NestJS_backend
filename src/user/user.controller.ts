@@ -117,6 +117,17 @@ export class UserController {
       },
     },
   })
+  @ApiResponse({
+    status: 404,
+    description: '找不到使用者或角色',
+    schema: {
+      example: {
+        statusCode: 404,
+        errorCode: '404-02-01-001',
+        message: '找不到使用者或角色',
+      },
+    },
+  })
   @Patch(':id/roles')
   async setUserRole(
     @Param() { id }: IdDto,

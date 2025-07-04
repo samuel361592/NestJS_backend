@@ -168,7 +168,7 @@ export class PostController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt')
-  @ApiOperation({ summary: '刪除貼文（需登入）' })
+  @ApiOperation({ summary: '刪除貼文（需登入，僅限作者或 admin））' })
   @ApiResponse({
     status: 200,
     description: '貼文刪除成功，回傳刪除的貼文',
