@@ -67,4 +67,15 @@ export class UserService implements OnModuleInit {
     await this.userRepo.save(user);
     return user;
   }
+
+  async initDefaultRoles(): Promise<void> {
+    const roles = ['admin', 'user'];
+    for (const name of roles) {
+      const exists = await this.roleService.findByName(name);
+      if (!exists) {
+        await this.roleService.create({ name });
+        this.logger.log(`預設角色 "${name}" 已建立`);
+      }
+    }
+  }
 }

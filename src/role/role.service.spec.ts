@@ -61,6 +61,13 @@ describe('RoleService', () => {
     expect(result).toEqual(mockRole);
   });
 
+  it('should find role by id using findById()', async () => {
+    const mockRole = { id: 3, name: 'editor', users: [] } as Role;
+    roleRepo.findOne.mockResolvedValue(mockRole);
+    const result = await service.findById(3);
+    expect(result).toEqual(mockRole);
+  });
+
   it('should create a new role', async () => {
     const dto = { name: 'newrole' };
     const newRole = { id: 2, name: 'newrole', users: [] } as Role;
@@ -77,8 +84,8 @@ describe('RoleService', () => {
       name: 'admin',
       users: [],
     } as Role);
-    await expect(() => service.create({ name: 'admin' })).rejects.toThrow(
-      'Role already exists',
+    await expect(service.create({ name: 'admin' })).rejects.toThrow(
+      '角色已存在',
     );
   });
 
@@ -91,13 +98,18 @@ describe('RoleService', () => {
     expect(result).toEqual(updatedRole);
   });
 
-  it('should remove a role', async () => {
-    const roleToRemove = { id: 1, name: 'admin', users: [] } as Role;
+  it('should remove a role and return it', async () => {
+    const roleToRemove: Role = { id: 1, name: 'admin', users: [] };
+
     roleRepo.findOneBy.mockResolvedValue(roleToRemove);
-    const removeSpy = jest
-      .spyOn(roleRepo, 'remove')
-      .mockResolvedValue(roleToRemove);
-    await service.remove(1);
-    expect(removeSpy).toHaveBeenCalledWith(roleToRemove);
+    roleRepo.remove.mockResolvedValue(roleToRemove);
+
+    const result = await service.remove(1);
+
+    expect(result).toEqual(roleToRemove);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(roleRepo.remove as jest.Mock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 1 }),
+    );
   });
 });

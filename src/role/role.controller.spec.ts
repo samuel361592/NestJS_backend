@@ -71,9 +71,12 @@ describe('RoleController', (): void => {
   });
 
   it('should remove a role', async (): Promise<void> => {
-    (mockRoleService.remove as jest.Mock).mockResolvedValueOnce(undefined);
-    const result: void = await controller.remove({ id: 1 });
-    expect(result).toBeUndefined();
+    const removedRole: Role = mockRole;
+    (mockRoleService.remove as jest.Mock).mockResolvedValueOnce(removedRole);
+
+    const result: Role = await controller.deleteRole(1);
+
+    expect(result).toEqual(removedRole);
     expect(mockRoleService.remove).toHaveBeenCalledWith(1);
   });
 });

@@ -10,14 +10,19 @@ import { Request } from 'express';
 
 describe('AuthController', () => {
   let controller: AuthController;
-
-  const mockAuthService = {
-    register: jest.fn(),
-    login: jest.fn(),
-    getProfile: jest.fn(),
+  let mockAuthService: {
+    register: jest.Mock;
+    login: jest.Mock;
+    getProfile: jest.Mock;
   };
 
   beforeEach(async () => {
+    mockAuthService = {
+      register: jest.fn(),
+      login: jest.fn(),
+      getProfile: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -30,28 +35,31 @@ describe('AuthController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({
         canActivate: (context: ExecutionContext) => {
-          const req: Request & {
-            user: {
-              id: number;
-              email: string;
-              name: string;
-              age: number;
-              roles: string[];
-            };
-          } = context.switchToHttp().getRequest();
-
-          req.user = {
-            id: 1,
-            email: 'test@example.com',
-            name: 'Test User',
-            age: 30,
-            roles: ['user'],
+          const req = context
+            .switchToHttp()
+            .getRequest<Request>() as Request & {
+            user: JwtPayload;
           };
+
+          req.user = req.headers['x-admin']
+            ? {
+                id: 2,
+                email: 'admin@example.com',
+                name: 'Admin',
+                age: 35,
+                roles: ['admin'],
+              }
+            : {
+                id: 1,
+                email: 'test@example.com',
+                name: 'Test User',
+                age: 30,
+                roles: ['user'],
+              };
 
           return true;
         },
       })
-
       .compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -98,7 +106,7 @@ describe('AuthController', () => {
   });
 
   describe('getProfile', () => {
-    it('應該取得使用者資料', async () => {
+    it('應該取得 user 使用者資料', async () => {
       const userEntity = {
         id: 1,
         email: 'test@example.com',
@@ -109,8 +117,8 @@ describe('AuthController', () => {
 
       mockAuthService.getProfile.mockResolvedValue(userEntity);
 
-      // 明確轉型為符合型別要求的 Request & { user: JwtPayload }
       const req = {
+        headers: {},
         user: {
           id: 1,
           email: 'test@example.com',
@@ -132,6 +140,42 @@ describe('AuthController', () => {
         },
       });
       expect(mockAuthService.getProfile).toHaveBeenCalledWith(1);
+    });
+
+    it('應該取得 admin 使用者資料', async () => {
+      const userEntity = {
+        id: 2,
+        email: 'admin@example.com',
+        name: 'Admin',
+        age: 35,
+        roles: [{ name: 'admin' }],
+      };
+
+      mockAuthService.getProfile.mockResolvedValue(userEntity);
+
+      const req = {
+        headers: { 'x-admin': '1' },
+        user: {
+          id: 2,
+          email: 'admin@example.com',
+          name: 'Admin',
+          age: 35,
+          roles: ['admin'],
+        },
+      } as unknown as Request & { user: JwtPayload };
+
+      const result = await controller.getProfile(req);
+
+      expect(result).toEqual({
+        user: {
+          id: 2,
+          email: 'admin@example.com',
+          name: 'Admin',
+          age: 35,
+          roles: ['admin'],
+        },
+      });
+      expect(mockAuthService.getProfile).toHaveBeenCalledWith(2);
     });
   });
 });

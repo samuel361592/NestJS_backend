@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Role } from '../entities/role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { ConflictException } from '@nestjs/common';
 
 @Injectable()
 export class RoleService {
@@ -28,7 +29,7 @@ export class RoleService {
 
   async create(dto: CreateRoleDto): Promise<Role> {
     const exists = await this.roleRepo.findOneBy({ name: dto.name });
-    if (exists) throw new Error('Role already exists');
+    if (exists) throw new ConflictException('角色已存在');
     const role = this.roleRepo.create(dto);
     return this.roleRepo.save(role);
   }

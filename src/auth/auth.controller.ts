@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { ErrorCode } from 'src/common/errors/error-codes.enum';
 import { Request as ExpressRequest } from 'express';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -77,7 +78,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth('admin')
   @ApiOperation({ summary: '取得登入使用者的資料(僅限admin)' })
   @ApiResponse({

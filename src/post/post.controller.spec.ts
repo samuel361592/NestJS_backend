@@ -5,6 +5,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtPayload } from '../auth/jwt.strategy';
 import { Request } from 'express';
+import { NotFoundException } from '@nestjs/common';
 
 type MockAuthRequest = Request & {
   user: JwtPayload & { iat?: number; exp?: number };
@@ -42,6 +43,10 @@ describe('PostController', () => {
     controller = module.get<PostController>(PostController);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should return all posts', async () => {
     const posts = [{ id: 1, title: 'Post1' }];
     mockPostService.findAll.mockResolvedValue(posts);
@@ -56,6 +61,14 @@ describe('PostController', () => {
 
     const result = await controller.getPostById(1);
     expect(result).toEqual(post);
+  });
+
+  it('should throw NotFoundException if post not found', async () => {
+    mockPostService.findOne.mockResolvedValue(null);
+
+    await expect(controller.getPostById(999)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should create a post', async () => {
@@ -76,11 +89,11 @@ describe('PostController', () => {
     expect(result).toEqual(updatedPost);
   });
 
-  it('should delete a post', async () => {
-    const deletedResult = { message: '貼文刪除成功' };
-    mockPostService.remove.mockResolvedValue(deletedResult);
+  it('should delete a post and return deleted post', async () => {
+    const deletedPost = { id: 1, title: 'Deleted', content: 'Deleted content' };
+    mockPostService.remove.mockResolvedValue(deletedPost);
 
     const result = await controller.deletePost(1, mockRequest);
-    expect(result).toEqual(deletedResult);
+    expect(result).toEqual(deletedPost);
   });
 });

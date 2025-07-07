@@ -4,6 +4,7 @@ import { UserService } from './user.service';
 import { Request } from 'express';
 import { IdDto } from './dto/id.dto';
 import { SetRoleDto } from './dto/set-role.dto';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -23,7 +24,12 @@ describe('UserController', () => {
         },
       ],
     }),
-    setUserRole: jest.fn().mockResolvedValue({}),
+    setUserRole: jest.fn().mockResolvedValue({
+      id: 2,
+      name: 'Bob',
+      email: 'bob@example.com',
+      roles: [{ id: 1, name: 'admin' }],
+    }),
   };
 
   beforeEach(async () => {
@@ -43,7 +49,7 @@ describe('UserController', () => {
 
   it('should allow admin to set role', async () => {
     const idDto: IdDto = { id: 2 };
-    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const setRoleDto: SetRoleDto = { roleIds: [1] };
     const mockRequest = {
       user: {
         id: 1,
@@ -52,13 +58,21 @@ describe('UserController', () => {
     } as unknown as Request;
 
     const result = await controller.setUserRole(idDto, setRoleDto, mockRequest);
-    expect(result).toEqual({ message: '角色更新成功' });
-    expect(mockUserService.setUserRole).toHaveBeenCalledWith(2, 'admin');
+    expect(result).toEqual({
+      message: '角色更新成功',
+      updatedUser: {
+        id: 2,
+        name: 'Bob',
+        email: 'bob@example.com',
+        roles: [{ id: 1, name: 'admin' }],
+      },
+    });
+    expect(mockUserService.setUserRole).toHaveBeenCalledWith(2, [1]);
   });
 
   it('should not allow non-admin to set role', async () => {
     const idDto: IdDto = { id: 2 };
-    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const setRoleDto: SetRoleDto = { roleIds: [1] };
     const mockRequest = {
       user: {
         id: 1,
@@ -68,12 +82,12 @@ describe('UserController', () => {
 
     await expect(
       controller.setUserRole(idDto, setRoleDto, mockRequest),
-    ).rejects.toThrow();
+    ).rejects.toThrow(ForbiddenException);
   });
 
   it('should not allow admin to set their own role', async () => {
     const idDto: IdDto = { id: 1 };
-    const setRoleDto: SetRoleDto = { role: 'admin' };
+    const setRoleDto: SetRoleDto = { roleIds: [1] };
     const mockRequest = {
       user: {
         id: 1,
@@ -83,6 +97,6 @@ describe('UserController', () => {
 
     await expect(
       controller.setUserRole(idDto, setRoleDto, mockRequest),
-    ).rejects.toThrow();
+    ).rejects.toThrow(ForbiddenException);
   });
 });
