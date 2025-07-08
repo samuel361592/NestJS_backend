@@ -1,97 +1,112 @@
 # Backend - NestJS API
+本專案為使用 NestJS + TypeORM + MySQL 打造的後端 API 系統，支援 JWT 驗證、角色權限控管與貼文 CRUD 功能，並整合 Swagger API 文件與 Postman 測試流程。支援本機與 Docker 快速部署。
 
-本專案為使用 [NestJS](https://nestjs.com/) + TypeORM + MySQL 打造的後端 API 系統，支援 JWT 驗證、角色權限控管與貼文 CRUD 功能，並整合 Swagger API 文件與 Postman 測試流程。
+### 快速啟動（使用 Docker）
+一鍵啟動
+```
+docker-compose up --build
+```
 
----
+啟動後：
 
-## 環境變數設定
+NestJS API → http://localhost:3001
 
-請在專案根目錄建立 `.env` 或 `.env.test` 檔案，範例如下：
+Swagger 文件 → http://localhost:3001/api
 
-```env
-DATABASE_URL=mysql://root:123456@localhost:3306/fullstackdb
+MySQL 服務 → localhost:3306（帳號密碼見 .env）
+
+### 環境變數設定
+請在專案根目錄建立 .env 或 .env.test 檔案，範例如下：
+
+```
+DATABASE_URL=mysql://root:123456@mysql:3306/fullstackdb
 JWT_SECRET=my-secret-key
 ```
-若為測試環境，請建立 .env.test，並將資料庫名稱改為 fullstackdb_test 或其他自訂名稱。
+Docker 中的 MySQL host 為 mysql
 
-JWT_SECRET 將用於產生與驗證使用者的 Access Token。
+若為本機執行則為 localhost
 
-安裝依賴
-```bash
+# 開發流程（本機）
+### 安裝依賴
+```
 npm install
 ```
-啟動伺服器
+### 啟動伺服器
 開發環境：
-```bash
-npm run start:dev
-測試環境（使用 .env.test）：
 ```
-```bash
+npm run start:dev
+```
+### 測試環境（使用 .env.test）：
+
+```
 cross-env NODE_ENV=test npm run start:dev
 ```
-TypeORM Migration 操作
+# TypeORM Migration
 產生 Migration 檔案：
-```bash
+
+```
 npx typeorm migration:generate src/migrations/init --dataSource src/data-source.ts
 ```
 執行 Migration 建立資料表：
-```bash
+
+```
 npx tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
 ```
-認證與權限系統
-使用者註冊後可登入並獲得 JWT Token。
+# 認證與權限設計
+使用者註冊後可登入並獲得 JWT Token
 
-所有需驗證的路由皆須於 headers 加入 Authorization: Bearer <token>。
+所有需驗證的路由皆須於 headers 加入：
 
-使用者擁有角色資料，可由 admin 指派角色。
+```
+Authorization: Bearer <token>
+```
+管理者（admin）可新增角色與指派使用者角色
 
-管理者（admin）可編輯角色與使用者權限。
+編輯與刪除貼文僅限作者本人或 admin
 
-API 測試方式
-可使用 Postman 或 Swagger UI 測試下列路由，登入取得 JWT Token 後，即可操作需授權的功能。
-
+# API 對照表（Swagger）
 Auth 認證
-| 方法	| 路由	| 說明 |
+| 方法 |	路由	 | 說明 |
 | ---- | ---- | ---- |
-| POST |	/auth/register |	使用者註冊 |
+| POST	| /auth/register	| 使用者註冊 |
 | POST |	/auth/login |	使用者登入 |
-| GET	| /auth/profile |	取得個人資料（需登入） |
+| GET |	/auth/profile |	取得登入者資料（需登入） |
 
-Role 角色管理
-| 方法 |	路由 |	權限 |	說明 |
-| ---- | ---- | ---- | ---- |
-| GET |	/roles |	admin |	取得所有角色 |
-| POST |	/roles |	admin |	新增角色 |
-| GET |	/roles/:id |	admin |	查詢角色 |
-| PATCH |	/roles/:id |	admin |	更新角色 |
-| DELETE |	/roles/:id |	admin |	刪除角色 |
+Role 角色管理（僅限 admin）
+| 方法 |	路由 |	說明 |
+| ---- | ---- | ---- |
+| GET |	/roles |	取得所有角色 |
+| POST |	/roles |	新增角色 |
+| GET |	/roles/:id |	取得單一角色 |
+| PATCH |	/roles/:id |	更新角色 |
+| DELETE |	/roles/:id |	刪除角色 |
 
-User 使用者管理
-| 方法 |	路由 |	權限 |	說明 |
-| ---- | ---- | ---- | ---- |
-| GET |	/users |	admin |	取得所有使用者 |
-| PATCH |	/users/:id/role |	admin |	指派使用者角色 |
+User 使用者管理（僅限 admin）
+| 方法 |	路由 |	說明 |
+| ---- | ----| ---- |
+| GET |	/users |	取得所有使用者 |
+| PATCH |	/users/:id/roles |	設定使用者角色 |
 
 Post 貼文功能
-| 方法 |	路由 |	存取條件 |	說明 |
-| ---- | ---- | ---- | ---- |
-| GET |	/posts |	無需登入 |	取得所有貼文 |
-| GET |	/posts/:id |	無需登入 |	查詢單篇貼文 |
-| POST |	/posts |	登入 |	建立貼文 |
-| PATCH |	/posts/:id |	作者本人 |	編輯自己的貼文 |
-| DELETE |	/posts/:id |	作者本人 |	刪除自己的貼文 |
+| 方法 |	路由 |	說明 |
+| ---- | ---- | ---- |
+| GET |	/posts |	取得所有貼文（無需登入） |
+| POST |	/posts |	建立貼文（需登入） |
+| GET |	/posts/:id |	根據 ID 取得單篇貼文（無需登入） |
+| PATCH |	/posts/:id |	更新貼文（需登入） |
+| DELETE |	/posts/:id |	刪除貼文（需登入，僅限作者或 admin） |
 
-API 文件
-啟動後可透過 Swagger UI 瀏覽完整 API 文件：
-
+Swagger API 文件
+啟動後瀏覽 API 文件：
+```
 http://localhost:3001/api
+```
+### 注意事項
+- migration 失敗時可清除 migrations/ 後重新產生
 
-注意事項
-migration 失敗時可清除 migrations/ 後重新產生。
+- 請分開管理 .env 與 .env.test，避免資料衝突
 
-請分開管理 .env 與 .env.test，避免開發與測試資料衝突。
-
-部分路由需管理者權限，請先於資料庫建立 admin 角色並指派。
+- 請先手動建立 admin 角色於資料庫，才能指派管理員權限
 
 作者
-本專案由 samuel 開發，作為學習與實作 NestJS + TypeORM + MySQL 的完整後端系統練習。
+本專案由 samuel 開發，作為學習與實作 NestJS + TypeORM + MySQL + Docker 的完整後端系統練習。
