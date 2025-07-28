@@ -18,4 +18,4 @@ RUN npm run build
 EXPOSE 3001
 
 # 執行應用程式
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "npm run typeorm migration:run && npm run start:prod"]
