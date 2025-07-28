@@ -49,10 +49,6 @@ export class UserService implements OnModuleInit {
 
     const roles: Role[] = [];
 
-    const userRole = await this.roleService.findByName('user');
-    if (!userRole) throw new NotFoundException('Default role "user" not found');
-    roles.push(userRole);
-
     for (const roleId of roleIds) {
       const role = await this.roleService.findById(roleId);
       if (!role) throw new NotFoundException(`Role id ${roleId} not found`);
@@ -66,16 +62,5 @@ export class UserService implements OnModuleInit {
 
     await this.userRepo.save(user);
     return user;
-  }
-
-  async initDefaultRoles(): Promise<void> {
-    const roles = ['admin', 'user'];
-    for (const name of roles) {
-      const exists = await this.roleService.findByName(name);
-      if (!exists) {
-        await this.roleService.create({ name });
-        this.logger.log(`預設角色 "${name}" 已建立`);
-      }
-    }
   }
 }

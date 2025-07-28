@@ -65,22 +65,8 @@ describe('AuthService', () => {
       });
     });
 
-    it('throws NotFoundException if role missing', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      roleService.findByName.mockResolvedValue(null);
-      await expect(
-        authService.register({
-          email: 'b@b.com',
-          password: 'p',
-          name: 'B',
-          age: 2,
-        }),
-      ).rejects.toThrow(NotFoundException);
-    });
-
     it('creates user and returns token', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      roleService.findByName.mockResolvedValue(fakeRole);
 
       const newUser = {
         id: 1,
@@ -89,7 +75,7 @@ describe('AuthService', () => {
         age: 3,
         password: 'hashed',
         posts: [],
-        roles: [fakeRole],
+        roles: [],
       } as User;
 
       userRepo.create.mockReturnValue(newUser);
@@ -107,14 +93,14 @@ describe('AuthService', () => {
         password: expect.any(String) as string,
         name: 'C',
         age: 3,
-        roles: [fakeRole],
+        roles: [],
       });
       expect(jwtService.sign).toHaveBeenCalledWith({
         id: 1,
         email: 'c@c.com',
         name: 'C',
         age: 3,
-        roles: ['user'],
+        roles: [],
       });
       expect(res).toEqual({ message: '註冊成功', token: 'token-123' });
     });

@@ -144,8 +144,7 @@ export class UserController {
     }
     if (user.id === id) {
       throw new ForbiddenException({
-        errorCode: ErrorCode.UnauthorizedRoleChange,
-        message: '不可修改自己的角色',
+        errorCode: ErrorCode.SelfRoleModificationForbidden,
       });
     }
 

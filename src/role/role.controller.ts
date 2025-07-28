@@ -133,7 +133,6 @@ export class RoleController {
       example: {
         statusCode: 404,
         errorCode: ErrorCode.UserNotFound,
-        message: '找不到角色',
       },
     },
   })

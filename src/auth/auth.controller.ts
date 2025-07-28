@@ -103,7 +103,6 @@ export class AuthController {
       example: {
         statusCode: 401,
         errorCode: ErrorCode.TokenMissing,
-        message: '請提供有效的 JWT token',
       },
     },
   })

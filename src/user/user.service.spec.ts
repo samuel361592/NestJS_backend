@@ -69,25 +69,6 @@ describe('UserService', () => {
     );
   });
 
-  it('should throw if default role not found in setUserRole', async () => {
-    const mockUser = {
-      id: 1,
-      name: 'Alice',
-      email: 'alice@example.com',
-      age: 30,
-      password: 'hashed',
-      posts: [],
-      roles: [],
-    } as User;
-
-    userRepo.findOne.mockResolvedValue(mockUser);
-    roleService.findByName.mockResolvedValue(null);
-
-    await expect(service.setUserRole(1, [2])).rejects.toThrow(
-      NotFoundException,
-    );
-  });
-
   it('should throw if any role id is not found', async () => {
     const mockUser = {
       id: 1,
@@ -99,10 +80,7 @@ describe('UserService', () => {
       roles: [],
     } as User;
 
-    const userRole = { id: 99, name: 'user', users: [] } as Role;
-
     userRepo.findOne.mockResolvedValue(mockUser);
-    roleService.findByName.mockResolvedValue(userRole);
     roleService.findById.mockResolvedValue(null);
 
     await expect(service.setUserRole(1, [2])).rejects.toThrow(
@@ -121,16 +99,14 @@ describe('UserService', () => {
       roles: [],
     };
 
-    const userRole: Role = { id: 1, name: 'user', users: [] };
     const adminRole: Role = { id: 2, name: 'admin', users: [] };
 
     userRepo.findOne.mockResolvedValue(mockUser);
-    roleService.findByName.mockResolvedValue(userRole);
     roleService.findById.mockResolvedValue(adminRole);
 
     const savedUser: User = {
       ...mockUser,
-      roles: [userRole, adminRole],
+      roles: [adminRole],
     };
 
     userRepo.save.mockResolvedValue(savedUser);
@@ -139,9 +115,9 @@ describe('UserService', () => {
     expect(typeof service.setUserRole).toBe('function');
 
     expect(result).toEqual(savedUser);
-    expect(result.roles).toEqual([userRole, adminRole]);
+    expect(result.roles).toEqual([adminRole]);
     expect(userRepo.save.mock.calls[0][0]).toEqual(
-      expect.objectContaining({ roles: [userRole, adminRole] }),
+      expect.objectContaining({ roles: [adminRole] }),
     );
   });
 
@@ -160,7 +136,7 @@ describe('UserService', () => {
       .spyOn(service['logger'], 'log')
       .mockImplementation(() => undefined);
 
-    await service.initDefaultRoles();
+    await service.onModuleInit();
 
     expect(roleService.findByName).toHaveBeenCalledWith('admin');
     expect(roleService.findByName).toHaveBeenCalledWith('user');
@@ -222,7 +198,7 @@ describe('UserService', () => {
         },
       );
 
-      await service.initDefaultRoles();
+      await service.onModuleInit();
 
       for (const name of expectedCreates) {
         expect(roleService.create).toHaveBeenCalledWith({ name });

@@ -38,18 +38,13 @@ export class AuthService {
       });
     }
 
-    const role = await this.roleService.findByName('user');
-    if (!role) {
-      throw new NotFoundException('找不到 user 角色，請先建立角色');
-    }
-
     const hashed = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({
       email,
       password: hashed,
       name,
       age,
-      roles: [role],
+      roles: [],
     });
     await this.userRepo.save(user);
 

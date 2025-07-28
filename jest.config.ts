@@ -14,6 +14,15 @@ export default {
     prefix: '<rootDir>/',
   }),
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+  '^.+\\.(t|j)s$': 'ts-jest',
   },
+  collectCoverageFrom: ['src/**/*.ts'],
+  coveragePathIgnorePatterns: [
+    "src/entities/",
+    "src/common/dto/",
+    "src/auth/dto/",
+    "src/post/dto/",
+    "src/role/dto/",
+    "src/user/dto/",
+  ],
 };
