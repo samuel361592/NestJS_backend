@@ -10,6 +10,9 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "setupFiles": ["<rootDir>/test/setup-env.ts"],
-  "testEnvironment": "node"
+  "setupFiles": ["<rootDir>/setup-env.ts"],
+  "testEnvironment": "node",
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  }
 }

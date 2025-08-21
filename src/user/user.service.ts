@@ -11,7 +11,7 @@ import { Role } from '../entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 
 @Injectable()
-export class UserService implements OnModuleInit {
+export class UserService {
   private readonly logger = new Logger(UserService.name);
 
   constructor(
@@ -21,16 +21,6 @@ export class UserService implements OnModuleInit {
     private readonly roleService: RoleService,
   ) {}
 
-  async onModuleInit(): Promise<void> {
-    const roles = ['admin', 'user'];
-    for (const name of roles) {
-      const exists = await this.roleService.findByName(name);
-      if (!exists) {
-        await this.roleService.create({ name });
-        this.logger.log(`預設角色 "${name}" 已建立`);
-      }
-    }
-  }
 
   async findAll(): Promise<{ users: User[] }> {
     const users = await this.userRepo.find({
