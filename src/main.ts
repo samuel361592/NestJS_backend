@@ -32,8 +32,8 @@ async function bootstrap(): Promise<void> {
   app
     .listen(3001, '0.0.0.0')
     .then(() => {
-      logger.log('Server is running on http://0.0.0.0:3001');
-      logger.log('Swagger is available at http://0.0.0.0:3001/api');
+      logger.log('Server is running on http://localhost:3001');
+      logger.log('Swagger is available at http://localhost:3001/api');
     })
     .catch((err) => {
       logger.error('啟動失敗', err);

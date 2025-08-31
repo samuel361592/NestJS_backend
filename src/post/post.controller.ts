@@ -94,7 +94,7 @@ export class PostController {
     schema: {
       example: {
         statusCode: 404,
-        errorCode: '404-01-01-001',
+        errorCode: ErrorCode.PostNotFound,
         message: '找不到貼文',
       },
     },
@@ -192,6 +192,7 @@ export class PostController {
       example: {
         statusCode: 403,
         errorCode: ErrorCode.ForbiddenPostDelete,
+        message: '禁止刪除此文章',
       },
     },
   })
@@ -203,6 +204,7 @@ export class PostController {
       example: {
         statusCode: 404,
         errorCode: ErrorCode.PostNotFound,
+        message: '文章不存在',
       },
     },
   })

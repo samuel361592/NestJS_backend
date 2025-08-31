@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  OnModuleInit,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +8,8 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { CreateTestUserDto } from './dto/create-test-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -45,12 +46,26 @@ export class UserService {
       roles.push(role);
     }
 
-    const uniqueRoles = Array.from(
-      new Map(roles.map((r) => [r.id, r])).values(),
-    );
-    user.roles = uniqueRoles;
+    user.roles = roles;
 
     await this.userRepo.save(user);
     return user;
+  }
+
+  async createTestUser(dto: CreateTestUserDto): Promise<User> {
+  const roles: Role[] = [];
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+  for (const roleId of dto.roleIds) {
+    const role = await this.roleService.findById(roleId);
+    if (role) roles.push(role);
+  }
+  const user = this.userRepo.create({
+    name: dto.name,
+    email: dto.email,
+    password: hashedPassword,
+    age: dto.age,
+    roles,
+  });
+  return await this.userRepo.save(user);
   }
 }
