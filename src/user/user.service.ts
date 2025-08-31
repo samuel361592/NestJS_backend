@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,7 +13,24 @@ import { CreateTestUserDto } from './dto/create-test-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
+  async onModuleInit(): Promise<void> {
+    await this.initDefaultRoles();
+  }
+
+  /** 預設角色初始化邏輯 */
+  async initDefaultRoles(): Promise<void> {
+    const admin = await this.roleService.findByName('admin');
+    if (!admin) {
+      await this.roleService.create({ name: 'admin' });
+      this.logger.log('預設角色 "admin" 已建立');
+    }
+    const user = await this.roleService.findByName('user');
+    if (!user) {
+      await this.roleService.create({ name: 'user' });
+      this.logger.log('預設角色 "user" 已建立');
+    }
+  }
   private readonly logger = new Logger(UserService.name);
 
   constructor(
