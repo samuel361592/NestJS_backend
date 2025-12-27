@@ -15,9 +15,10 @@ import { RolesGuard } from './common/guards/roles.guard';
     }),
 
     TypeOrmModule.forRoot({
-      type: 'mysql',
+      type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      ssl: { rejectUnauthorized: false },
+      autoLoadEntities: true,
       synchronize: false,
     }),
 

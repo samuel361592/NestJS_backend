@@ -5,23 +5,23 @@ import { DataSource } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { Post } from './entities/post.entity';
-import { parse } from 'url';
 
-const dbUrl = process.env.DATABASE_URL || '';
-const parsedUrl = parse(dbUrl);
-const [username, password] = (parsedUrl.auth || '').split(':');
-const dbName = (parsedUrl.pathname || '').replace('/', '');
+const dbUrl = process.env.DATABASE_URL;
+
+if (!dbUrl) {
+  throw new Error('DATABASE_URL is not defined');
+}
 
 export const AppDataSource = new DataSource({
-  type: 'mysql',
-  host: parsedUrl.hostname ?? 'localhost',
-  port: parseInt(parsedUrl.port || '3306'),
-  username,
-  password,
-  database: dbName,
+  type: 'postgres',
+  url: dbUrl,
+
+  ssl: { rejectUnauthorized: false },
+
   entities: [User, Post, Role],
-  migrations: ['src/migrations/*.ts'],
+
+  migrations: ['dist/migrations/*.js'],
+
   synchronize: false,
-  logging: true,
+  logging: false,
 });
-console.log('正在使用資料庫：', dbName);
