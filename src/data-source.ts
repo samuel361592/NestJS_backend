@@ -20,7 +20,7 @@ export const AppDataSource = new DataSource({
 
   entities: [User, Post, Role],
 
-  migrations: ['dist/migrations/*.js'],
+  migrations: ['dist/migrations/PostgreSQL/*.js'],
 
   synchronize: false,
   logging: false,
