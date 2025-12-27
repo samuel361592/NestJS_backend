@@ -1,5 +1,5 @@
 # 使用 Node.js 18 作為基礎映像
-FROM node:18-slim
+FROM node:20-slim
 
 # 設定容器內的工作目錄
 WORKDIR /app
