@@ -9,7 +9,15 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.enableCors({ origin: true, credentials: true });
+  app.enableCors({
+  origin: [
+    'http://localhost:3000',
+    'https://nextjsfrontend-green.vercel.app',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  });
   app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
