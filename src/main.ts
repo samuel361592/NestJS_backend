@@ -10,21 +10,7 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors({
-    origin: (origin, callback) => {
-      const allowList = [
-        'http://localhost:3000',
-        'https://nextjsfrontend-green.vercel.app',
-      ];
-
-      if (!origin || allowList.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    origin: true,
   });
 
 
