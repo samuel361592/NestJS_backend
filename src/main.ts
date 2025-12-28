@@ -9,17 +9,24 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   app.useGlobalFilters(new AllExceptionsFilter());
-app.enableCors({
-  origin: [
-    'http://localhost:3000',
-    'https://nextjsfrontend-green.vercel.app',
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  app.enableCors({
+    origin: (origin, callback) => {
+      const allowList = [
+        'http://localhost:3000',
+        'https://nextjsfrontend-green.vercel.app',
+      ];
+
+      if (!origin || allowList.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
   });
+
 
   const config = new DocumentBuilder()
     .setTitle('Fullstack Project API')
