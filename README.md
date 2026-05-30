@@ -4,7 +4,7 @@
 ### 快速啟動（使用 Docker）
 一鍵啟動
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 啟動後：
@@ -13,18 +13,30 @@ NestJS API → http://localhost:3001
 
 Swagger 文件 → http://localhost:3001/api
 
-MySQL 服務 → localhost:3306（帳號密碼見 .env）
+MySQL 服務 → localhost:3307
+
+Docker 預設資料庫設定：
+
+```
+DATABASE_URL=mysql://nest:123456@mysql:3306/nestdb
+MYSQL_DATABASE=nestdb
+MYSQL_USER=nest
+MYSQL_PASSWORD=123456
+MYSQL_ROOT_PASSWORD=root
+```
+
+後端容器會等 MySQL healthcheck 通過後，自動執行 migration 並啟動 API。
 
 ### 環境變數設定
 請在專案根目錄建立 .env 或 .env.test 檔案，範例如下：
 
 ```
-DATABASE_URL=mysql://root:123456@mysql:3306/fullstackdb
+DATABASE_URL=mysql://nest:123456@localhost:3307/nestdb
 JWT_SECRET=my-secret-key
 ```
-Docker 中的 MySQL host 為 mysql
+Docker 容器內的 MySQL host 為 mysql
 
-若為本機執行則為 localhost
+若從本機直接執行 NestJS，MySQL host 為 localhost
 
 # 開發流程（本機）
 ### 安裝依賴
