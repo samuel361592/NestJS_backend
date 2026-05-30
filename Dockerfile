@@ -1,4 +1,4 @@
-# 使用 Node.js 18 作為基礎映像
+# 使用 Node.js 20 作為基礎映像
 FROM node:20-slim
 
 # 設定容器內的工作目錄
@@ -17,5 +17,5 @@ RUN npm run build
 # 暴露預設 port
 EXPOSE 3001
 
-# 執行應用程式
+# 執行 migration 後啟動應用程式
 CMD ["sh", "-c", "npm run migration:run && npm run start:prod"]
