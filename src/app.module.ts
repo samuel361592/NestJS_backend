@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthModule } from './health/health.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
@@ -10,6 +11,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
+    HealthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

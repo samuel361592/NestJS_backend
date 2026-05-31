@@ -1,0 +1,15 @@
+name: Keep Render and Supabase Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call backend database health endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 30 "${{ secrets.RENDER_HEALTH_DB_URL }}"
