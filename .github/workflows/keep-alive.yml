@@ -1,9 +1,10 @@
 name: Keep Render and Supabase Alive
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
+
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
 
 jobs:
   keep-alive:
