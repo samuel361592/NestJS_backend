@@ -136,6 +136,7 @@ describe('UserService', () => {
       );
 
       roleService.create.mockResolvedValue({ id: 2, name: 'user', users: [] });
+      userRepo.findOne.mockResolvedValue(null);
 
       const loggerSpy = jest
         .spyOn(service['logger'], 'log')

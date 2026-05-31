@@ -26,6 +26,7 @@ describe('AuthService', () => {
     };
     const roleSvcMock: Partial<jest.Mocked<RoleService>> = {
       findByName: jest.fn(),
+      create: jest.fn(),
     };
     const jwtSvcMock: Partial<jest.Mocked<JwtService>> = {
       sign: jest.fn().mockReturnValue('token-123'),
@@ -67,6 +68,7 @@ describe('AuthService', () => {
 
     it('creates user and returns token', async () => {
       userRepo.findOne.mockResolvedValue(null);
+      roleService.findByName.mockResolvedValue(fakeRole);
 
       const newUser = {
         id: 1,
@@ -75,7 +77,7 @@ describe('AuthService', () => {
         age: 3,
         password: 'hashed',
         posts: [],
-        roles: [],
+        roles: [fakeRole],
       } as User;
 
       userRepo.create.mockReturnValue(newUser);
@@ -93,16 +95,47 @@ describe('AuthService', () => {
         password: expect.any(String) as string,
         name: 'C',
         age: 3,
-        roles: [],
+        roles: [fakeRole],
       });
       expect(jwtService.sign).toHaveBeenCalledWith({
         id: 1,
         email: 'c@c.com',
         name: 'C',
         age: 3,
-        roles: [],
+        roles: ['user'],
       });
       expect(res).toEqual({ message: '註冊成功', token: 'token-123' });
+    });
+
+    it('creates default user role during register if missing', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      roleService.findByName.mockResolvedValue(null);
+      roleService.create.mockResolvedValue(fakeRole);
+
+      const newUser = {
+        id: 1,
+        email: 'c@c.com',
+        name: 'C',
+        age: 3,
+        password: 'hashed',
+        posts: [],
+        roles: [fakeRole],
+      } as User;
+
+      userRepo.create.mockReturnValue(newUser);
+      userRepo.save.mockResolvedValue(newUser);
+
+      await authService.register({
+        email: 'c@c.com',
+        password: 'pw',
+        name: 'C',
+        age: 3,
+      });
+
+      expect(roleService.create).toHaveBeenCalledWith({ name: 'user' });
+      expect(userRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ roles: [fakeRole] }),
+      );
     });
   });
 

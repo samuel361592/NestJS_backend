@@ -39,12 +39,17 @@ export class AuthService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+    let defaultRole = await this.roleService.findByName('user');
+    if (!defaultRole) {
+      defaultRole = await this.roleService.create({ name: 'user' });
+    }
+
     const user = this.userRepo.create({
       email,
       password: hashed,
       name,
       age,
-      roles: [],
+      roles: [defaultRole],
     });
     await this.userRepo.save(user);
 

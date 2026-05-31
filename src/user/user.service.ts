@@ -20,16 +20,17 @@ export class UserService implements OnModuleInit {
 
   /** 預設角色初始化邏輯 */
   async initDefaultRoles(): Promise<void> {
-    const admin = await this.roleService.findByName('admin');
-    if (!admin) {
-      await this.roleService.create({ name: 'admin' });
-      this.logger.log('預設角色 "admin" 已建立');
-    }
-    const user = await this.roleService.findByName('user');
-    if (!user) {
-      await this.roleService.create({ name: 'user' });
-      this.logger.log('預設角色 "user" 已建立');
-    }
+    await this.ensureDefaultRole('admin');
+    await this.ensureDefaultRole('user');
+  }
+
+  private async ensureDefaultRole(name: string): Promise<Role> {
+    const role = await this.roleService.findByName(name);
+    if (role) return role;
+
+    const createdRole = await this.roleService.create({ name });
+    this.logger.log(`預設角色 "${name}" 已建立`);
+    return createdRole;
   }
   private readonly logger = new Logger(UserService.name);
 
