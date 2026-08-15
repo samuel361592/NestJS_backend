@@ -4,14 +4,14 @@ import { User } from './user.entity';
 @Entity()
 export class Post {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text' })
-  content: string;
+  content!: string;
 
   @ManyToOne(() => User, (user) => user.posts)
-  user: User;
+  user!: User;
 }

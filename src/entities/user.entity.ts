@@ -14,24 +14,24 @@ import { Role } from './role.entity';
 @Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 100 })
-  name: string;
+  name!: string;
 
   @Column({ type: 'varchar', length: 100 })
-  email: string;
+  email!: string;
 
   @Column({ type: 'varchar', select: false })
-  password: string;
+  password!: string;
 
   @Column({ type: 'int' })
-  age: number;
+  age!: number;
 
   @OneToMany(() => Post, (post) => post.user)
-  posts: Post[];
+  posts!: Post[];
 
   @ManyToMany(() => Role, { eager: true })
   @JoinTable({ name: 'user_roles' })
-  roles: Role[];
+  roles!: Role[];
 }

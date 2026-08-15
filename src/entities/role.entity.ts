@@ -7,12 +7,12 @@ import { User } from './user.entity';
 export class Role {
   @ApiProperty({ example: 2, description: '角色 ID' })
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ApiProperty({ example: 'admin', description: '角色名稱' })
   @Column({ type: 'varchar', length: 100, unique: true })
-  name: string;
+  name!: string;
 
   @ManyToMany(() => User, (user) => user.roles)
-  users: User[];
+  users!: User[];
 }
