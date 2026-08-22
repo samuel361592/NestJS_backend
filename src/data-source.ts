@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { Post } from './entities/post.entity';
@@ -12,16 +12,26 @@ if (!dbUrl) {
   throw new Error('DATABASE_URL is not defined');
 }
 
-export const AppDataSource = new DataSource({
-  type: 'postgres',
-  url: dbUrl,
+const entities = [User, Post, Role];
+const isMysql = dbUrl.startsWith('mysql://') || dbUrl.startsWith('mysql2://');
 
-  ssl: { rejectUnauthorized: false },
+const dataSourceOptions: DataSourceOptions = isMysql
+  ? {
+      type: 'mysql',
+      url: dbUrl,
+      entities,
+      migrations: ['dist/migrations/mysql/*.js'],
+      synchronize: false,
+      logging: false,
+    }
+  : {
+      type: 'postgres',
+      url: dbUrl,
+      ssl: { rejectUnauthorized: false },
+      entities,
+      migrations: ['dist/migrations/PostgreSQL/*.js'],
+      synchronize: false,
+      logging: false,
+    };
 
-  entities: [User, Post, Role],
-
-  migrations: ['dist/migrations/PostgreSQL/*.js'],
-
-  synchronize: false,
-  logging: false,
-});
+export const AppDataSource = new DataSource(dataSourceOptions);
