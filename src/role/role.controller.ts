@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -136,7 +137,7 @@ export class RoleController {
       },
     },
   })
-  async deleteRole(@Param('id') id: number): Promise<Role> {
+  async deleteRole(@Param('id', ParseIntPipe) id: number): Promise<Role> {
     const deleted = await this.roleService.remove(id);
     return deleted;
   }

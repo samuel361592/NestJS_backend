@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, Min } from 'class-validator';
 
 export class IdDto {
   @ApiProperty({ example: 1 })
-  @Transform(({ value }) => +value)
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt({ message: 'id 必須是整數' })
+  @Min(1, { message: 'id 必須大於等於 1' })
   id: number;
 }

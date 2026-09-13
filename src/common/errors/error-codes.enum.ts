@@ -1,25 +1,26 @@
 export enum ErrorCode {
-  InvalidCredentials       = '401-01-001',
-  TokenMissing             = '401-01-002',
-  InvalidRegisterFormat    = '400-01-003',
-  InvalidJsonFormat        = '400-01-004',
-  InternalServerError      = '500-01-004',
-  Unauthorized             = '401-01-005',
-  EmailAlreadyExists       = '409-01-001',
+  InvalidCredentials = '401-01-001',
+  TokenMissing = '401-01-002',
+  InvalidRequestFormat = '400-00-001',
+  InvalidRegisterFormat = '400-01-003',
+  InvalidJsonFormat = '400-01-004',
+  InternalServerError = '500-01-004',
+  Unauthorized = '401-01-005',
+  EmailAlreadyExists = '409-01-001',
 
-  UserNotFound             = '404-02-002',
-  UnauthorizedRoleChange   = '403-02-001',
+  UserNotFound = '404-02-002',
+  UnauthorizedRoleChange = '403-02-001',
   SelfRoleModificationForbidden = '403-02-003',
 
-
-  PostNotFound             = '404-03-001',
-  ForbiddenPostEdit        = '403-03-002',
-  ForbiddenPostDelete      = '403-03-003',
+  PostNotFound = '404-03-001',
+  ForbiddenPostEdit = '403-03-002',
+  ForbiddenPostDelete = '403-03-003',
 }
 
 export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.InvalidCredentials]: '帳號或密碼錯誤',
   [ErrorCode.TokenMissing]: '請提供有效的 JWT token',
+  [ErrorCode.InvalidRequestFormat]: '請求資料格式無效',
   [ErrorCode.InvalidRegisterFormat]: '註冊格式無效',
   [ErrorCode.InvalidJsonFormat]: 'JSON 格式無效',
   [ErrorCode.InternalServerError]: '內部伺服器錯誤',

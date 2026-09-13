@@ -99,7 +99,9 @@ export class PostController {
       },
     },
   })
-  async getPostById(@Param('id') id: number): Promise<PostEntity> {
+  async getPostById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PostEntity> {
     const post = await this.postService.findOne(id);
     if (!post) {
       throw new NotFoundException({
@@ -158,7 +160,7 @@ export class PostController {
     },
   })
   updatePost(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePostDto,
     @Request() req: AuthRequest,
   ): Promise<PostEntity> {

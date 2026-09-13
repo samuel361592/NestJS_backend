@@ -1,13 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ArrayNotEmpty, IsInt, Validate } from 'class-validator';
-import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
+import { IsArray, ArrayNotEmpty, IsInt, Min, Validate } from 'class-validator';
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 
 @ValidatorConstraint({ name: 'UniqueArray', async: false })
 export class UniqueArrayConstraint implements ValidatorConstraintInterface {
-  validate(arr: any[], args: ValidationArguments) {
-    return Array.isArray(arr) && new Set(arr).size === arr.length;
+  validate(value: unknown): boolean {
+    return Array.isArray(value) && new Set(value).size === value.length;
   }
-  defaultMessage(args: ValidationArguments) {
+
+  defaultMessage(): string {
     return 'roleIds 不能有重複值';
   }
 }
@@ -17,6 +21,7 @@ export class SetRoleDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
+  @Min(1, { each: true })
   @Validate(UniqueArrayConstraint)
   roleIds: number[];
 }
