@@ -9,8 +9,6 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { RoleService } from 'src/role/role.service';
-import { CreateTestUserDto } from './dto/create-test-user.dto';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -41,7 +39,6 @@ export class UserService implements OnModuleInit {
     private readonly roleService: RoleService,
   ) {}
 
-
   async findAll(): Promise<{ users: User[] }> {
     const users = await this.userRepo.find({
       relations: ['roles'],
@@ -69,22 +66,5 @@ export class UserService implements OnModuleInit {
 
     await this.userRepo.save(user);
     return user;
-  }
-
-  async createTestUser(dto: CreateTestUserDto): Promise<User> {
-  const roles: Role[] = [];
-  const hashedPassword = await bcrypt.hash(dto.password, 10);
-  for (const roleId of dto.roleIds) {
-    const role = await this.roleService.findById(roleId);
-    if (role) roles.push(role);
-  }
-  const user = this.userRepo.create({
-    name: dto.name,
-    email: dto.email,
-    password: hashedPassword,
-    age: dto.age,
-    roles,
-  });
-  return await this.userRepo.save(user);
   }
 }

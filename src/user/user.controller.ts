@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Patch,
   Param,
   Body,
@@ -15,7 +14,6 @@ import { Roles, RolesGuard } from '../common/guards/roles.guard';
 import { Request as ExpressRequest } from 'express';
 import {
   ApiTags,
-  ApiBody,
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
@@ -26,7 +24,6 @@ import { JwtPayload } from '../auth/jwt.strategy';
 import { User } from '../entities/user.entity';
 import { IdDto } from './dto/id.dto';
 import { SetRoleDto } from './dto/set-role.dto';
-import { CreateTestUserDto } from './dto/create-test-user.dto';
 
 @ApiTags('User')
 @Controller('users')
@@ -86,79 +83,6 @@ export class UserController {
   getAllUsers(): Promise<{ users: User[] }> {
     return this.userService.findAll();
   }
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('admin')
-  @ApiBody({ type: CreateTestUserDto })
-  @Post('test-create')
-  @ApiOperation({ summary: '建立測試用戶（測試人員用）' })
-  @ApiResponse({
-    status: 201,
-    description: '建立成功',
-    schema: {
-      example: {
-        message: '建立成功',
-        user: {
-          id: 1,
-          name: 'testuser',
-          email: 'testuser@example.com',
-          age: 25,
-          roles: [{ id: 1, name: 'admin' }],
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '建立失敗',
-    schema: {
-      example: {
-        errorCode: ErrorCode.InvalidRegisterFormat,
-        message: '註冊格式無效',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 500,
-    description: '系統錯誤',
-    schema: {
-      example: {
-        errorCode: ErrorCode.InternalServerError,
-        message: '內部伺服器錯誤',
-      },
-    },
-  })
-  async createTestUser(@Body() dto: CreateTestUserDto) {
-    try {
-      const user = await this.userService.createTestUser(dto);
-      return { message: '建立成功', user };
-    } catch (error) {
-      let msg = '註冊格式無效';
-      let errorCode = ErrorCode.InvalidRegisterFormat;
-      let status = 400;
-
-      if (error?.message?.includes('Duplicate entry')) {
-        msg = '此信箱已被註冊，請使用其他信箱';
-        errorCode = ErrorCode.EmailAlreadyExists;
-      }
-
-      if (error?.message?.includes('Role id')) {
-        msg = '使用者不存在';
-        errorCode = ErrorCode.UserNotFound;
-      }
-
-      if (!error?.message?.includes('Duplicate entry') && !error?.message?.includes('Role id')) {
-        msg = '內部伺服器錯誤';
-        errorCode = ErrorCode.InternalServerError;
-        status = 500;
-      }
-      return {
-        statusCode: status,
-        errorCode,
-        message: msg,
-      };
-    }
-  }
-
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('admin')
   @ApiOperation({ summary: '設定使用者角色（僅限 admin）' })
@@ -225,8 +149,5 @@ export class UserController {
 
     const updatedUser = await this.userService.setUserRole(id, roleIds);
     return { message: '角色更新成功', updatedUser };
-
-    
   }
-
 }
